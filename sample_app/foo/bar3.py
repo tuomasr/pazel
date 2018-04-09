@@ -4,7 +4,7 @@ import time
 
 
 def main():
-    print(time.time())
+    print("Hello pazel.")
 
 
 main()

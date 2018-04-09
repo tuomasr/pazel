@@ -1,6 +1,6 @@
 from setuptools import setup, find_packages
 
-description = "A tool to generate Bazel BUILD files for a Python file or project."
+description = "Generate Bazel BUILD files for a Python project."
 
 setup(
     name='pazel',
