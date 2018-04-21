@@ -1,0 +1,5 @@
+"""Define pazel extensions for this directory and its subdirectories unless overriden elsewhere."""
+
+HEADER = """package(default_visibility = ["//visibility:public"])"""
+
+FOOTER = """# My footer"""

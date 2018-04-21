@@ -42,3 +42,5 @@ py_test(    # pazel would mark bar4.py as a library but it remains as a test bec
 custom_rule("bar5",  # pazel recognizes positional arguments, too.
             "bar5.py"
 )
+
+# My footer

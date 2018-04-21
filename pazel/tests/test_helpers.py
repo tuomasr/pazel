@@ -10,8 +10,10 @@ from pazel.helpers import parse_enclosed_expression
 
 
 class TestHelpers(unittest.TestCase):
+    """Test helper functions."""
 
     def test_parse_enclosed_expression(self):
+        """Test parse_enclosed_expression."""
         expected_expression = """py_library(
             name = "foo",
             srcs = ["foo.py"],
