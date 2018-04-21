@@ -62,6 +62,9 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
 
     # Base is package/module and the type of unknown is inferred below.
     for base, unknown in all_imports:
+        if unknown == '*':
+            raise NotImplementedError("Importing everything with * is not supported.")
+
         # Early exit if base is in the installed modules of the current environment.
         if is_installed(base, unknown, contains_pre_installed_packages):
             continue
@@ -92,7 +95,52 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
             modules.append(dotted_path)
             continue
 
+        # Check if 'base' is a package and 'unknown' is part of its "public" interface
+        # as declared in __all__ of the __init__.py file.
+        package_path = os.path.join(project_root, base.replace('.', '/'))
+        if os.path.isdir(package_path) and _in_public_interface(package_path, unknown):
+            modules.append(base + '.__init__')
+            continue
+
         # Finally, assume that base is either a pip installable or a local package.
         packages.append(base)
 
     return set(packages), set(modules)
+
+
+def _in_public_interface(package_path, unknown):
+    """Check if 'unknown' is part of the public interface of a package.
+
+    Args:
+        package_path (str): Path to a Python package.
+        unknown (str): Some object in the package.
+
+    Returns:
+        public (bool): Whether 'unknown' if part of the public interface.
+    """
+    public = False
+    init_path = os.path.join(package_path, '__init__.py')
+
+    # Try parsing the __init__.py file of the package.
+    try:
+        with open(init_path, 'r') as init_file:
+            init_source = init_file.read()
+    except IOError:
+        return public
+
+    try:
+        top_node = ast.parse(init_source)
+    except SyntaxError:
+        return public
+
+    for node in top_node.body:
+        # Check assigning to __all__.
+        if isinstance(node, ast.Assign):
+            # The number of variables on the left side should be 1.
+            if len(node.targets) == 1:
+                left_side = node.targets[0].id
+
+                if left_side == '__all__':
+                    for element in node.value.elts:
+                        if element.s == unknown:
+                            return True
