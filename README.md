@@ -1,5 +1,7 @@
 # pazel - generate Bazel BUILD files for Python
 
+[![Build Status](https://travis-ci.org/tuomasr/pazel.svg?branch=master)](https://travis-ci.org/tuomasr/pazel)
+
 ## Requirements
 
 ### pazel

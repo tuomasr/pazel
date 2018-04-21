@@ -1,0 +1,11 @@
+language: python
+matrix:
+    include:
+        - os: linux
+          python: 2.7
+        - os: linux
+          python: 3.6
+        - os: osx
+          language: generic
+script:
+  - python setup.py test
