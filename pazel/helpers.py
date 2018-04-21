@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import importlib
 import os
 import platform
@@ -24,6 +25,73 @@ def contains_python_file(directory):
     contains_py = any(f.endswith('.py') or f.endswith('.pyc') for f in files)
 
     return contains_py
+
+
+def get_build_file_path(path):
+    """Get path to a BUILD file next to a given path.
+
+    Args:
+        path (str): Path to a file or directory.
+
+    Returns
+        build_file_path (str): Path to the BUILD in the given directory or in the directory
+        containing the given file.
+    """
+    if os.path.isdir(path):
+        directory = path
+    else:
+        directory = os.path.dirpath(path)
+
+    build_file_path = os.path.join(directory, 'BUILD')
+
+    return build_file_path
+
+
+def is_ignored(script_path, ignored_rules):
+    """Check whether the given script is in ignored rules.
+
+    Args:
+        script_path (str): Path to a Python script.
+        ignored_rules (list of str): Ignored Bazel rules.
+
+    Returns:
+        ignored (bool): Whether the script should be ignored.
+    """
+    ignored = False
+
+    script_file_name = os.path.basename(script_path)
+
+    for ignored_rule in ignored_rules:
+        # Parse the rule to an AST node.
+        try:
+            node = ast.parse(ignored_rule)
+        except SyntaxError:
+            raise SyntaxError("Invalid syntax in an ignored rule %s." % ignored_rule)
+
+        assert len(node.body) == 1, "Unsupported rule type %s." % ignored_rule
+
+        # Check keyword arguments in the rule. If the 'srcs' argument contains the script file name,
+        # then the script should be ignored.
+        func_call = node.body[0].value
+
+        for keyword in func_call.keywords:
+            if keyword.arg == 'srcs':
+                elements = keyword.value.elts
+
+                assert len(elements) == 1, \
+                    "Multiple source files not supported in %s." % ignored_rule
+
+                if elements[0].s == script_file_name:
+                    ignored = True
+                    break
+
+        # The script file name may also given as a positional argument.
+        for positional in func_call.args:
+            if positional.s == script_file_name:
+                ignored = True
+                break
+
+    return ignored
 
 
 def is_python_file(path):

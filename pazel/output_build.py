@@ -4,8 +4,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
-
 
 # Used for installing pip packages. See https://github.com/bazelbuild/rules_python
 REQUIREMENT = """
@@ -16,12 +14,13 @@ HEADER = """package(default_visibility = ["//visibility:public"]){requirement}
 """
 
 
-def output_build_file(build_source, directory):
+def output_build_file(build_source, ignored_rules, build_file_path):
     """Output a BUILD file.
 
     Args:
         build_source (str): The contents of the BUILD file to output.
-        directory (str): The directory in which the BUILD file is stored.
+        ignored_rules (list of str): Rules the user wants to keep as is.
+        build_file_path (str): Path to the BUILD file in which build_source is written.
     """
     # If the BUILD file contains external packages, add the Bazel method for installing them.
     if 'requirement("' in build_source:
@@ -32,5 +31,10 @@ def output_build_file(build_source, directory):
     header = HEADER.format(requirement=requirement)
     build_source = header + build_source
 
-    with open(os.path.join(directory, 'BUILD'), 'w') as build_file:
+    # Add ignored rules to the bottom, separated by newlines.
+    if ignored_rules:
+        build_source = build_source.rstrip()
+        build_source += '\n' + '\n'.join(ignored_rules) + '\n'
+
+    with open(build_file_path, 'w') as build_file:
         build_file.write(build_source)

@@ -50,3 +50,11 @@ Use `pazel -r <some_path>` to override the path to which the imports are relativ
 
 By default, `pazel` adds rules to install all external Python packages. If your environment has
 pre-installed packages for which these rules are not required, then use `pazel -p`.
+
+
+### Working with custom Bazel rules and ignoring rules in existing BUILD files
+
+The tag `# pazel-ignore` causes `pazel` to ignore the rule that immediately follows it in an
+existing BUILD file. See `sample_app/foo/BUILD` for an example using the tag.
+This feature can be applied to custom rules, in particular. `pazel` places the ignored rules
+at the bottom of the BUILD file.

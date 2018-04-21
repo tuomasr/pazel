@@ -28,3 +28,17 @@ py_binary(
     deps = [],
 )
 
+# pazel-ignore
+load("//:custom_rule.bzl", "custom_rule")
+
+# pazel-ignore
+py_test(    # pazel would mark bar4.py as a library but it remains as a test because it is ignored.
+    name = "bar4",
+    srcs = ["bar4.py"],
+    deps = [],
+)
+
+# pazel-ignore
+custom_rule("bar5",  # pazel recognizes positional arguments, too.
+            "bar5.py"
+)

@@ -1,1 +1,1 @@
-"""pazel - Generate Bazel BUILD files for Python.""" 
+"""pazel - Generate Bazel BUILD files for Python."""

@@ -8,8 +8,11 @@ import argparse
 import os
 
 from pazel.generate_rule import parse_script_and_generate_rule
+from pazel.helpers import get_build_file_path
+from pazel.helpers import is_ignored
 from pazel.helpers import is_python_file
 from pazel.output_build import output_build_file
+from pazel.parse_build import get_ignored_rules
 
 
 def app(input_path, project_root, contains_pre_installed_packages):
@@ -31,24 +34,35 @@ def app(input_path, project_root, contains_pre_installed_packages):
         for dirpath, _, filenames in os.walk(input_path):
             build_source = ''
 
+            # Parse ignored rules in an existing BUILD file, if any.
+            build_file_path = get_build_file_path(dirpath)
+            ignored_rules = get_ignored_rules(build_file_path)
+
             for filename in sorted(filenames):
                 path = os.path.join(dirpath, filename)
 
-                # If a Python file is met, generate a Bazel rule for it.
-                if is_python_file(path):
+                # If a Python file is met and it is not in the list of ignored rules,
+                # generate a Bazel rule for it.
+                if is_python_file(path) and not is_ignored(path, ignored_rules):
                     build_source += parse_script_and_generate_rule(path, project_root,
                                                                    contains_pre_installed_packages)
                     build_source += 2*'\n'  # Add newline between rules.
 
             # If Python files were found, output the BUILD file.
             if build_source != '':
-                output_build_file(build_source, dirpath)
+                output_build_file(build_source, ignored_rules, build_file_path)
     # Handle single Python file.
     elif is_python_file(input_path):
-        build_source = parse_script_and_generate_rule(input_path, project_root,
-                                                      contains_pre_installed_packages)
+        # Parse ignored rules in an existing BUILD file, if any.
+        build_file_path = get_build_file_path(input_path)
+        ignored_rules = get_ignored_rules(build_file_path)
 
-        output_build_file(build_source, os.path.dirpath(input_path))
+        # Check that the script is not in the list of ignored rules.
+        if not is_ignored(input_path, ignored_rules):
+            build_source = parse_script_and_generate_rule(input_path, project_root,
+                                                          contains_pre_installed_packages)
+
+            output_build_file(build_source, ignored_rules, build_file_path)
     else:
         raise RuntimeError("Invalid input path %s." % input_path)
 

@@ -1,4 +1,4 @@
-"""Parse existing BUILD files to infer data dependencies and test sizes."""
+"""Parse existing BUILD files."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -122,3 +122,32 @@ def find_existing_data_deps(script_path, script_type):
         data = parse_enclosed_expression(rule, match.start(), '(')
 
     return data
+
+
+def get_ignored_rules(build_file_path):
+    """Check if an existing BUILD file contains rule that should be ignored.
+
+    Args:
+        build_file_path (str): Path to an existing BUILD file.
+
+    Returns:
+        ignored_rules (list of str): Ignored Bazel rule(s). Empty list if no ignored rules were
+        found or if the Bazel BUILD does not exist.
+    """
+    try:
+        with open(build_file_path, 'r') as build_file:
+            build_source = build_file.read()
+    except IOError:
+        return []
+
+    ignored_rules = []
+
+    # pazel ignores rules following the tag "# pazel-ignore". Spaces are ignored within the tag but
+    # the line must start with #.
+    for match in re.finditer('\n#\s+pazel-ignore\s+', build_source):
+        start = match.start()
+
+        rule = parse_enclosed_expression(build_source, start, '(')
+        ignored_rules.append(rule)
+
+    return ignored_rules
