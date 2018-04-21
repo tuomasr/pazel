@@ -54,9 +54,18 @@ By default, `pazel` adds rules to install all external Python packages. If your 
 pre-installed packages for which these rules are not required, then use `pazel -p`.
 
 
-### Working with custom Bazel rules and ignoring rules in existing BUILD files
+### Ignoring rules in existing BUILD files
 
-The tag `# pazel-ignore` causes `pazel` to ignore the rule that immediately follows it in an
-existing BUILD file. See `sample_app/foo/BUILD` for an example using the tag.
-This feature can be applied to custom rules, in particular. `pazel` places the ignored rules
-at the bottom of the BUILD file.
+The tag `# pazel-ignore` causes `pazel` to ignore the rule that immediately follows the tag in an
+existing BUILD file. In particular, the tag can be used to skip custom rules that `pazel` does not 
+handle. `pazel` places the ignored rules at the bottom of the BUILD file. See `sample_app/foo/BUILD`
+for an example using the tag.
+
+
+### Customizing and extending pazel
+
+`pazel` can be programmed using a `.pazelrc` Python file that should be located in the project root
+(defaults to the current working directory but can be changed with the flag `pazel -r <some_path>`).
+
+The user can define variables `HEADER` and `FOOTER` to add custom header and footer to all
+BUILD files, respectively. See `sample_app/.pazelrc` and `sample_app/BUILD` for an example.

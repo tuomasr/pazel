@@ -33,3 +33,4 @@ py_test(
     data = glob(["test_data/*.png"])
 )
 
+# My footer
