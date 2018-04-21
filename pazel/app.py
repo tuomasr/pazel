@@ -7,39 +7,24 @@ from __future__ import print_function
 import argparse
 import os
 
-from pazel.gen_rule import parse_script_and_generate_rule
-from pazel.helpers import is_valid_python_file
+from pazel.generate_rule import parse_script_and_generate_rule
+from pazel.helpers import is_python_file
+from pazel.output_build import output_build_file
 
 
-# Used for installing pip packages.
-# See https://github.com/bazelbuild/rules_python
-REQUIREMENT = """
-load("@my_deps//:requirements.bzl", "requirement")"""
+def app(input_path, project_root, contains_pre_installed_packages):
+    """Generate BUILD file(s) for a Python script or a directory of Python scripts.
 
+    Args:
+        input_path (str): Path to a Python file or to a directory containing Python file(s) for
+        which BUILD files are generated.
+        project_root (str): Imports in the Python files are relative to this path.
+        contains_pre_installed_packages (bool): Whether the environment is allowed to contain
+        pre-installed packages or whether only the Python standard library is available.
 
-HEADER = """package(default_visibility = ["//visibility:public"]){requirement}
-
-"""
-
-
-def output_build_file(build_source, directory):
-    """Output a BUILD file."""
-    # If the BUILD file contains external packages, add the Bazel method for installing them.
-    if 'requirement("' in build_source:
-        requirement = REQUIREMENT
-    else:
-        requirement = ''
-
-    header = HEADER.format(requirement=requirement)
-    build_source = header + build_source
-
-    with open(os.path.join(directory, 'BUILD'), 'w') as f:
-        f.write(build_source)
-
-
-def app(input_path, project_root, pre_installed_packages):
-    """Generate BUILD file(s) for a Python script or a directory of Python scripts."""
-
+    Raises:
+        RuntimeError: input_path does is not a directory or a Python file.
+    """
     # Handle directories.
     if os.path.isdir(input_path):
         # Traverse the directory recursively.
@@ -49,18 +34,19 @@ def app(input_path, project_root, pre_installed_packages):
             for filename in sorted(filenames):
                 path = os.path.join(dirpath, filename)
 
-                # Generate rule for Python files.
-                if is_valid_python_file(path):
+                # If a Python file is met, generate a Bazel rule for it.
+                if is_python_file(path):
                     build_source += parse_script_and_generate_rule(path, project_root,
-                                                                   pre_installed_packages)
-                    build_source += 2*'\n'  # newline between rules.
+                                                                   contains_pre_installed_packages)
+                    build_source += 2*'\n'  # Add newline between rules.
 
+            # If Python files were found, output the BUILD file.
             if build_source != '':
                 output_build_file(build_source, dirpath)
-    # Handle single Python files.
-    elif is_valid_python_file(input_path):
+    # Handle single Python file.
+    elif is_python_file(input_path):
         build_source = parse_script_and_generate_rule(input_path, project_root,
-                                                      pre_installed_packages)
+                                                      contains_pre_installed_packages)
 
         output_build_file(build_source, os.path.dirpath(input_path))
     else:
@@ -71,10 +57,12 @@ def main():
     """Parse command-line flags and generate the BUILD files accordingly."""
     parser = argparse.ArgumentParser(description='Generate Bazel BUILD files for a Python project.')
 
-    parser.add_argument('input_path', nargs='?', type=str, default=os.getcwd(),
+    working_directory = os.getcwd()
+
+    parser.add_argument('input_path', nargs='?', type=str, default=working_directory,
                         help='Target Python file or directory of Python files.'
                         ' Defaults to the current working directory.')
-    parser.add_argument('-r', '--project-root', type=str, default=os.getcwd(),
+    parser.add_argument('-r', '--project-root', type=str, default=working_directory,
                         help='Project root directory. Imports are relative to this path.'
                         ' Defaults to the current working directory.')
     parser.add_argument('-p', '--pre-installed-packages', action='store_true',

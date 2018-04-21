@@ -6,17 +6,13 @@ from __future__ import print_function
 
 import os
 
-from pazel.helpers import contains_py_files
-from pazel.helpers import is_installed
-
 from pazel.parse_build import find_existing_data_deps
-from pazel.parse_build import find_existing_rule
 from pazel.parse_build import find_existing_test_size
-from pazel.parse_build import infer_python_rule_type
 
 from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
+from pazel.script_type import infer_python_rule_type
 from pazel.script_type import ScriptType
 
 
@@ -47,7 +43,19 @@ PY_TEST_TEMPLATE = """py_test(
 
 
 def generate_rule(script_path, script_type, package_names, module_names, data_deps, test_size):
-    """Generate a Bazel Python rule given the type of the Python file and imports in it."""
+    """Generate a Bazel Python rule given the type of the Python file and imports in it.
+
+    Args:
+        script_path (str): Path to a Python script.
+        script_type (ScriptType): Enum representing the type of the Python script.
+        package_names (set of str): Set of imported packages names in dotted notation (pkg1.pkg2).
+        module_names (set of str): Set of imported module names in dotted notation (pkg.module)
+        data_deps (str): Data dependencies parsed from an existing BUILD file.
+        test_size (str): Test size parsed from an existing BUILD file.
+
+    Returns:
+        rule (str): Bazel rule generated for the current Python script.
+    """
     if script_type == ScriptType.BINARY:
         template = PY_BINARY_TEMPLATE
     elif script_type == ScriptType.LIBRARY:
@@ -73,7 +81,7 @@ def generate_rule(script_path, script_type, package_names, module_names, data_de
     if multiple_deps:
         deps += '\n'
 
-    for module_name in sorted(list(set(module_names))):
+    for module_name in sorted(list(module_names)):
         # Format the dotted module name to the Bazel format with slashes.
         module_name = '//' + module_name.replace('.', '/')
 
@@ -90,9 +98,9 @@ def generate_rule(script_path, script_type, package_names, module_names, data_de
             deps += ',\n'
 
     # Even if a submodule of a local or external package is required, install the whole package.
-    package_names = [p.split('.')[0] for p in package_names]
+    package_names = set([p.split('.')[0] for p in package_names])
 
-    for package_name in sorted(list(set(package_names))):
+    for package_name in sorted(list(package_names)):
         if multiple_deps:
             deps += 2*tab
 
@@ -117,23 +125,33 @@ def generate_rule(script_path, script_type, package_names, module_names, data_de
     return rule
 
 
-def parse_script_and_generate_rule(script_path, project_root, pre_installed_packages):
-    """Generate Bazel Python rule for a Python script."""
-    with open(script_path, 'r') as f:
-        source = f.read()
+def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages):
+    """Generate Bazel Python rule for a Python script.
 
-    # Get all imports in the current script.
-    package_names, from_imports = get_imports(source)
+    Args:
+        script_path (str): Path to a Python file for which the Bazel rule is generated.
+        project_root (str): Imports in the Python script are assumed to be relative to this path.
+        contains_pre_installed_packages (bool): Environment contains pre-installed packages (true)
+        or only the standard library (false).
+
+    Returns:
+        rule (str): Bazel rule generated for the Python script.
+    """
+    with open(script_path, 'r') as script_file:
+        script_source = script_file.read()
+
+    # Get all imports in the script.
+    package_names, from_imports = get_imports(script_source)
     all_imports = package_names + from_imports
 
     # Infer the import type: Is a package, module, or an object being imported.
     package_names, module_names = infer_import_type(all_imports, project_root,
-                                                    pre_installed_packages)
+                                                    contains_pre_installed_packages)
 
     # Infer the script type: library, binary or test.
-    script_type = infer_python_rule_type(script_path, source)
+    script_type = infer_python_rule_type(script_path, script_source)
 
-    # Data dependencies or test size cannot be inferred currently.
+    # Data dependencies or test size cannot be inferred from the script source code currently.
     # Use information in any existing BUILD files.
     data_deps = find_existing_data_deps(script_path, script_type)
     test_size = find_existing_test_size(script_path) if script_type == ScriptType.TEST else None
