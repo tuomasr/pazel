@@ -8,17 +8,16 @@ import os
 import re
 
 from pazel.helpers import parse_enclosed_expression
-from pazel.script_type import ScriptType
 
 
-def find_existing_rule(build_file_path, script_filename, script_type):
+def find_existing_rule(build_file_path, script_filename, rule_identifier):
     """Find Bazel rule for a given Python script in a BUILD file.
 
     Args:
         build_file_path (str): Path to an existing BUILD file that may contain a rule for a given
         Python script.
         script_filename (str): File name of the Python script.
-        script_type (ScriptType): Enum representing the type of the Python script.
+        rule_identifier (str): Identifier to search for the start of an existing Bazel rule.
 
     Returns:
         rule (str): Existing Bazel rule for the Python script. If there is no rule, then None.
@@ -30,13 +29,6 @@ def find_existing_rule(build_file_path, script_filename, script_type):
     except IOError:
         return None
 
-    rule_start = 'py_library('
-
-    if script_type == ScriptType.BINARY:
-        rule_start = 'py_binary('
-    elif script_type == ScriptType.TEST:
-        rule_start = 'py_test('
-
     # Find the start of the Bazel Python rule corresponding to the current script.
     pattern = 'srcs\s*=\s*\["' + script_filename + '"\]'
     match = re.search(pattern, build_source)
@@ -44,7 +36,7 @@ def find_existing_rule(build_file_path, script_filename, script_type):
     if match is None:
         return None
 
-    start = build_source.rfind(rule_start, 0, match.start())
+    start = build_source.rfind(rule_identifier, 0, match.start())
 
     assert start, "Could not locate the start of the Bazel Python rule for %s." % script_filename
 
@@ -54,21 +46,25 @@ def find_existing_rule(build_file_path, script_filename, script_type):
     return rule
 
 
-def find_existing_test_size(script_path):
+def find_existing_test_size(script_path, bazel_rule_type):
     """Check if the existing Bazel rule for a Python test contains test size.
 
     Args:
         script_path (str): Path to a Python file that is a test.
+        bazel_rule_type (Rule class): pazel-native or a custom Rule class.
 
     Returns:
         test_size (str): Size of the test (small, medium, etc.) if found in the existing BUILD file.
         If not found, then None is returned.
     """
+    if not bazel_rule_type.is_test_rule:
+        return None
+
     script_dir = os.path.dirname(script_path)
     script_filename = os.path.basename(script_path)
     build_file_path = os.path.join(script_dir, 'BUILD')
 
-    rule = find_existing_rule(build_file_path, script_filename, ScriptType.TEST)
+    rule = find_existing_rule(build_file_path, script_filename, bazel_rule_type.rule_identifier)
 
     # No existing Bazel rules for the given Python file.
     if rule is None:
@@ -86,12 +82,12 @@ def find_existing_test_size(script_path):
     return None
 
 
-def find_existing_data_deps(script_path, script_type):
+def find_existing_data_deps(script_path, bazel_rule_type):
     """Check if the existing Bazel Python rule in a BUILD file contains data dependencies.
 
     Args:
         script_path (str): Path to a Python script.
-        script_type (ScriptType): Enum representing the type of the Python script.
+        bazel_rule_type (Rule class): pazel-native or a custom Rule class.
 
     Returns:
         data (str): Data dependencies in the existing rule for the Python script.
@@ -100,7 +96,7 @@ def find_existing_data_deps(script_path, script_type):
     script_filename = os.path.basename(script_path)
     build_file_path = os.path.join(script_dir, 'BUILD')
 
-    rule = find_existing_rule(build_file_path, script_filename, script_type)
+    rule = find_existing_rule(build_file_path, script_filename, bazel_rule_type.rule_identifier)
 
     # No matches, no data deps.
     if rule is None:

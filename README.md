@@ -67,5 +67,15 @@ for an example using the tag.
 `pazel` can be programmed using a `.pazelrc` Python file that should be located in the project root
 (defaults to the current working directory but can be changed with the flag `pazel -r <some_path>`).
 
-The user can define variables `HEADER` and `FOOTER` to add custom header and footer to all
-BUILD files, respectively. See `sample_app/.pazelrc` and `sample_app/BUILD` for an example.
+The user can define variables `HEADER` and `FOOTER` to add custom header and footer to
+all BUILD files, respectively. See `sample_app/.pazelrc` and `sample_app/BUILD` for an example that
+adds the same `visibility` to all BUILD files.
+
+If some pip package has different install name than import name, then the user
+should define `EXTRA_IMPORT_NAME_TO_PIP_NAME` dictionary accordingly. `sample_app/.pazelrc` has
+`{'yaml': 'pyyaml'}` as an example.
+
+The user can define custom Bazel rules by adding a new `Rule` class to `.pazelrc`.
+`sample_app/.pazelrc` defines a custom `PyDoctestRule` class that identifies all doctests and
+generates custom `py_doctest` Bazel rules for them as defined in `sample_app/custom_rules.bzl`.
+Custom `Rule` classes must follow the interface in `pazel/bazel_rules.py`.

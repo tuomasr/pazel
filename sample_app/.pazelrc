@@ -1,5 +1,44 @@
-"""Define pazel extensions for this directory and its subdirectories unless overriden elsewhere."""
+"""Define pazel extensions for this directory and its subdirectories."""
 
 HEADER = """package(default_visibility = ["//visibility:public"])"""
 
 FOOTER = """# My footer"""
+
+# Template will be filled and used to generate BUILD files.
+PY_DOCTEST_TEMPLATE = """py_doctest(
+    "{name}",
+    "{name}.py",
+    deps = [{deps}],
+    {data}
+)"""
+
+import re
+
+class PyDoctestRule(object):
+    """Class for representing custom Bazel rule py_doctest as defined in custom_rules.bzl."""
+
+    # Required class variables.
+    is_test_rule = True     # Is this a test rule?
+    template = PY_DOCTEST_TEMPLATE  # Filled version of this will be written to the BUILD file.
+    rule_identifier = 'py_doctest'  # The name of the rule.
+
+    @staticmethod
+    def applies_to(script_name, script_source):
+        """Check whether py_doctest rule should be used for the given script.
+
+        Args:
+            script_name (str): Name of a Python script without the .py suffix.
+            script_source (str): Source code of the script.
+
+        Returns:
+            applies (bool): Whether py_doctest should be used to represent the script.
+        """
+        imports_doctest = re.findall('import doctest', script_source)
+
+        return imports_doctest
+
+
+EXTRA_RULES = [PyDoctestRule]
+
+
+EXTRA_IMPORT_NAME_TO_PIP_NAME = {'yaml': 'pyyaml'}

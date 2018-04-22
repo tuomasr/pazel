@@ -30,7 +30,7 @@ def app(input_path, project_root, contains_pre_installed_packages):
         RuntimeError: input_path does is not a directory or a Python file.
     """
     # Parse user-defined extensions to pazel.
-    extensions = parse_pazel_extensions(project_root)
+    output_extension = parse_pazel_extensions(project_root)
 
     # Handle directories.
     if os.path.isdir(input_path):
@@ -54,7 +54,7 @@ def app(input_path, project_root, contains_pre_installed_packages):
 
             # If Python files were found, output the BUILD file.
             if build_source != '':
-                output_build_file(build_source, ignored_rules, extensions, build_file_path)
+                output_build_file(build_source, ignored_rules, output_extension, build_file_path)
     # Handle single Python file.
     elif is_python_file(input_path):
         # Parse ignored rules in an existing BUILD file, if any.
@@ -66,7 +66,7 @@ def app(input_path, project_root, contains_pre_installed_packages):
             build_source = parse_script_and_generate_rule(input_path, project_root,
                                                           contains_pre_installed_packages)
 
-            output_build_file(build_source, ignored_rules, extensions, build_file_path)
+            output_build_file(build_source, ignored_rules, output_extension, build_file_path)
     else:
         raise RuntimeError("Invalid input path %s." % input_path)
 
