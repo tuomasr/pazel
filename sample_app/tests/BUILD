@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 load("@my_deps//:requirements.bzl", "requirement")
 
+# pazel-ignore
+load("//:custom_rules.bzl", "py_doctest")
+
 py_library(
     name = "__init__",
     srcs = ["__init__.py"],
@@ -31,6 +34,12 @@ py_test(
     size = "small",
     deps = [],
     data = glob(["test_data/*.png"])
+)
+
+py_doctest(
+    "test_doctest",
+    "test_doctest.py",
+    deps = [],
 )
 
 # My footer

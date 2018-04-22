@@ -1,6 +1,9 @@
 package(default_visibility = ["//visibility:public"])
 load("@my_deps//:requirements.bzl", "requirement")
 
+# pazel-ignore
+load("//:custom_rules.bzl", "custom_rule")
+
 py_library(
     name = "__init__",
     srcs = ["__init__.py"],
@@ -27,9 +30,6 @@ py_binary(
     srcs = ["bar3.py"],
     deps = [],
 )
-
-# pazel-ignore
-load("//:custom_rule.bzl", "custom_rule")
 
 # pazel-ignore
 py_test(    # pazel would mark bar4.py as a library but it remains as a test because it is ignored.

@@ -6,48 +6,24 @@ from __future__ import print_function
 
 import os
 
+from pazel.bazel_rules import infer_bazel_rule_type
+
 from pazel.parse_build import find_existing_data_deps
 from pazel.parse_build import find_existing_test_size
 
 from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
-from pazel.script_type import infer_python_rule_type
-from pazel.script_type import ScriptType
+
+IMPORT_NAME_TO_PIP_NAME = {}
 
 
-# For some packages, the import name differs from that of the pip package...
-IMPORT_NAME_TO_PIP_NAME = {'cv2': 'opencv-python', 'yaml': 'pyyaml'}
-
-PY_BINARY_TEMPLATE = """py_binary(
-    name = "{name}",
-    srcs = ["{name}.py"],
-    deps = [{deps}],
-    {data}
-)"""
-
-PY_LIBRARY_TEMPLATE = """py_library(
-    name = "{name}",
-    srcs = ["{name}.py"],
-    deps = [{deps}],
-    {data}
-)"""
-
-PY_TEST_TEMPLATE = """py_test(
-    name = "{name}",
-    srcs = ["{name}.py"],
-    size = "{size}",
-    deps = [{deps}],
-    {data}
-)"""
-
-
-def generate_rule(script_path, script_type, package_names, module_names, data_deps, test_size):
+def generate_rule(script_path, template, package_names, module_names, data_deps, test_size):
     """Generate a Bazel Python rule given the type of the Python file and imports in it.
 
     Args:
         script_path (str): Path to a Python script.
-        script_type (ScriptType): Enum representing the type of the Python script.
+        template (str): Template for writing a Bazel rule. To be filled with name, srcs, deps, etc.
         package_names (set of str): Set of imported packages names in dotted notation (pkg1.pkg2).
         module_names (set of str): Set of imported module names in dotted notation (pkg.module)
         data_deps (str): Data dependencies parsed from an existing BUILD file.
@@ -56,13 +32,6 @@ def generate_rule(script_path, script_type, package_names, module_names, data_de
     Returns:
         rule (str): Bazel rule generated for the current Python script.
     """
-    if script_type == ScriptType.BINARY:
-        template = PY_BINARY_TEMPLATE
-    elif script_type == ScriptType.LIBRARY:
-        template = PY_LIBRARY_TEMPLATE
-    elif script_type == ScriptType.TEST:
-        template = PY_TEST_TEMPLATE
-
     script_name = os.path.basename(script_path).replace('.py', '')
     deps = ''
     tab = '    '
@@ -148,16 +117,16 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
     package_names, module_names = infer_import_type(all_imports, project_root,
                                                     contains_pre_installed_packages)
 
-    # Infer the script type: library, binary or test.
-    script_type = infer_python_rule_type(script_path, script_source)
+    # Infer the Bazel rule type for the script.
+    bazel_rule_type = infer_bazel_rule_type(script_path, script_source)
 
     # Data dependencies or test size cannot be inferred from the script source code currently.
     # Use information in any existing BUILD files.
-    data_deps = find_existing_data_deps(script_path, script_type)
-    test_size = find_existing_test_size(script_path) if script_type == ScriptType.TEST else None
+    data_deps = find_existing_data_deps(script_path, bazel_rule_type)
+    test_size = find_existing_test_size(script_path, bazel_rule_type)
 
     # Generate the Bazel Python rule based on the gathered information.
-    rule = generate_rule(script_path, script_type, package_names, module_names, data_deps,
-                         test_size)
+    rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
+                         data_deps, test_size)
 
     return rule
