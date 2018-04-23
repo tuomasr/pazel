@@ -31,6 +31,12 @@ py_binary(
     deps = [],
 )
 
+py_library(
+    name = "bar6",
+    srcs = ["bar6.py"],
+    deps = ["//xyz:abc1"],
+)
+
 # pazel-ignore
 py_test(    # pazel would mark bar4.py as a library but it remains as a test because it is ignored.
     name = "bar4",

@@ -105,8 +105,8 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
 
 
 def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages,
-                                   custom_bazel_rules, import_name_to_pip_name,
-                                   local_import_name_to_dep):
+                                   custom_bazel_rules, custom_import_inference_rules,
+                                   import_name_to_pip_name, local_import_name_to_dep):
     """Generate Bazel Python rule for a Python script.
 
     Args:
@@ -115,6 +115,8 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
         contains_pre_installed_packages (bool): Environment contains pre-installed packages (true)
             or only the standard library (false).
         custom_bazel_rules (list of BazelRule classes): Custom rule classes implementing BazelRule.
+        custom_import_inference_rules (list of ImportInferenceRule classes): Custom rule classes
+            implementing ImportInferenceRule.
         import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
         local_import_name_to_dep (dict): Mapping from local package import name to its Bazel
             dependency.
@@ -131,7 +133,8 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
 
     # Infer the import type: Is a package, module, or an object being imported.
     package_names, module_names = infer_import_type(all_imports, project_root,
-                                                    contains_pre_installed_packages)
+                                                    contains_pre_installed_packages,
+                                                    custom_import_inference_rules)
 
     # Infer the Bazel rule type for the script.
     bazel_rule_type = infer_bazel_rule_type(script_path, script_source, custom_bazel_rules)
