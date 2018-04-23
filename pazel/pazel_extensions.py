@@ -10,6 +10,7 @@ import os
 
 from pazel.bazel_rules import REGISTERED_RULES  # noqa
 from pazel.generate_rule import IMPORT_NAME_TO_PIP_NAME     # noqa
+from pazel.generate_rule import LOCAL_IMPORT_NAME_TO_DEP    # noqa
 
 
 PAZELRC_FILE = '.pazelrc'
@@ -78,8 +79,15 @@ def parse_pazel_extensions(directory):
     # Read user-defined mapping from package import names to pip package names.
     user_defined_pip_import_mapping = getattr(pazelrc, 'EXTRA_IMPORT_NAME_TO_PIP_NAME', dict())
 
-    # Update the mapping. TODO: Remove global.
+    # Update the corresponding mapping. TODO: Remove global.
     global IMPORT_NAME_TO_PIP_NAME
     IMPORT_NAME_TO_PIP_NAME.update(user_defined_pip_import_mapping)
+
+    # Read user-defined mapping from local import names to their Bazel dependencies.
+    user_defined_local_dep_mapping = getattr(pazelrc, 'EXTRA_LOCAL_IMPORT_NAME_TO_DEP', dict())
+
+    # Update the corresponding mapping. TODO: Remove global.
+    global LOCAL_IMPORT_NAME_TO_DEP
+    LOCAL_IMPORT_NAME_TO_DEP.update(user_defined_local_dep_mapping)
 
     return output_extension

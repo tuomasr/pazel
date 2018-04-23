@@ -144,3 +144,5 @@ def _in_public_interface(package_path, unknown):
                     for element in node.value.elts:
                         if element.s == unknown:
                             return True
+
+    return False

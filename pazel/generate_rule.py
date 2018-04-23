@@ -15,7 +15,10 @@ from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
 
+# Map external package import name to pip installation name ({'yaml': 'pyyaml'}, for example).
 IMPORT_NAME_TO_PIP_NAME = {}
+# Map local package import name to Bazel dependency name ({'mypackage': '//mypackage'}).
+LOCAL_IMPORT_NAME_TO_DEP = {}
 
 
 def generate_rule(script_path, template, package_names, module_names, data_deps, test_size):
@@ -69,17 +72,25 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     # Even if a submodule of a local or external package is required, install the whole package.
     package_names = set([p.split('.')[0] for p in package_names])
 
-    for package_name in sorted(list(package_names)):
-        if multiple_deps:
-            deps += 2*tab
+    # Split packages to local and external.
+    local_packages = [p for p in package_names if p in LOCAL_IMPORT_NAME_TO_DEP]
+    external_packages = [p for p in package_names if p not in LOCAL_IMPORT_NAME_TO_DEP]
 
-        package_name = IMPORT_NAME_TO_PIP_NAME.get(package_name, package_name)
-        package_name = 'requirement(\"%s\")' % package_name
+    for package_set in (local_packages, external_packages):     # List local packages first.
+        for package_name in sorted(list(package_set)):
+            if multiple_deps:
+                deps += 2*tab
 
-        deps += package_name
+            if package_name in LOCAL_IMPORT_NAME_TO_DEP:    # Local package.
+                package_name = LOCAL_IMPORT_NAME_TO_DEP[package_name]
+                deps += '\"' + package_name + '\"'
+            else:   # External/pip installable package.
+                package_name = IMPORT_NAME_TO_PIP_NAME.get(package_name, package_name)
+                package_name = 'requirement(\"%s\")' % package_name
+                deps += package_name
 
-        if multiple_deps:
-            deps += ',\n'
+            if multiple_deps:
+                deps += ',\n'
 
     if multiple_deps:
         deps += tab

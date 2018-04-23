@@ -38,7 +38,11 @@ class PyDoctestRule(object):
         return imports_doctest
 
 
+# Add custom Rule classes to this list so that pazel registers them.
 EXTRA_RULES = [PyDoctestRule]
 
-
+# Map import name to pip install name, if they differ.
 EXTRA_IMPORT_NAME_TO_PIP_NAME = {'yaml': 'pyyaml'}
+
+# Map local package import name to its Bazel dependency.
+EXTRA_LOCAL_IMPORT_NAME_TO_DEP = dict()
