@@ -73,9 +73,11 @@ adds the same `visibility` to all BUILD files.
 
 If some pip package has different install name than import name, then the user
 should define `EXTRA_IMPORT_NAME_TO_PIP_NAME` dictionary accordingly. `sample_app/.pazelrc` has
-`{'yaml': 'pyyaml'}` as an example.
+`{'yaml': 'pyyaml'}` as an example. In addition, the user can specify local packages and their
+corresponding Bazel dependencies using the `EXTRA_LOCAL_IMPORT_NAME_TO_DEP` dictionary.
 
-The user can define custom Bazel rules by adding a new `Rule` class to `.pazelrc`.
-`sample_app/.pazelrc` defines a custom `PyDoctestRule` class that identifies all doctests and
-generates custom `py_doctest` Bazel rules for them as defined in `sample_app/custom_rules.bzl`.
-Custom `Rule` classes must follow the interface in `pazel/bazel_rules.py`.
+The user can define custom Bazel rules by defining a new `Rule` class and by
+adding the class to `EXTRA_RULES` list in `.pazelrc`. `sample_app/.pazelrc` defines a custom
+`PyDoctestRule` class that identifies all doctests and generates custom `py_doctest` Bazel rules for
+them as defined in `sample_app/custom_rules.bzl`. Custom `Rule` classes must follow the interface in
+`pazel/bazel_rules.py`.
