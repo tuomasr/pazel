@@ -38,7 +38,7 @@ def find_existing_rule(build_file_path, script_filename, rule_identifier):
 
     start = build_source.rfind(rule_identifier, 0, match.start())
 
-    assert start, "Could not locate the start of the Bazel Python rule for %s." % script_filename
+    assert start != -1, "The start of the Bazel Python rule for %s not located." % script_filename
 
     # Find the rule by matching opening and closing parentheses.
     rule = parse_enclosed_expression(build_source, start, '(')

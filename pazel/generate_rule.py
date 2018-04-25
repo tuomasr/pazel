@@ -7,10 +7,8 @@ from __future__ import print_function
 import os
 
 from pazel.bazel_rules import infer_bazel_rule_type
-
 from pazel.parse_build import find_existing_data_deps
 from pazel.parse_build import find_existing_test_size
-
 from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
@@ -54,12 +52,15 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
         deps += '\n'
 
     for module_name in sorted(list(module_names)):
-        # Format the dotted module name to the Bazel format with slashes.
-        module_name = '//' + module_name.replace('.', '/')
+        if '.' not in module_name:
+            module_name = ':' + module_name
+        else:
+            # Format the dotted module name to the Bazel format with slashes.
+            module_name = '//' + module_name.replace('.', '/')
 
-        # Replace the last slash with :.
-        last_slash_idx = module_name.rfind('/')
-        module_name = module_name[:last_slash_idx] + ':' + module_name[last_slash_idx + 1:]
+            # Replace the last slash with :.
+            last_slash_idx = module_name.rfind('/')
+            module_name = module_name[:last_slash_idx] + ':' + module_name[last_slash_idx + 1:]
 
         if multiple_deps:
             deps += 2*tab

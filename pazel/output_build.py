@@ -23,7 +23,10 @@ def output_build_file(build_source, ignored_rules, output_extension, build_file_
         output_extension (OutputExtension): User-defined header and footer.
         build_file_path (str): Path to the BUILD file in which build_source is written.
     """
-    header = _append_newline(output_extension.header)
+    header = ''
+
+    if output_extension.header:
+        header += _append_newline(output_extension.header)
 
     # If the BUILD file contains external packages, add the Bazel method for installing them.
     if 'requirement("' in build_source:
@@ -39,14 +42,21 @@ def output_build_file(build_source, ignored_rules, output_extension, build_file_
             else:
                 remaining_ignored_rules.append(ignored_rule)
 
-    build_source = header + '\n' + build_source
+    # If a header exists, add a newline between it and the rules.
+    if header:
+        header += '\n'
+
+    output = header + build_source
 
     # Add other ignored rules than load statements to the bottom, separated by newlines.
     if remaining_ignored_rules:
-        build_source = build_source.rstrip()
-        build_source += '\n' + '\n'.join(remaining_ignored_rules) + 2*'\n'
+        output = output.rstrip()
+        output += '\n' + '\n'.join(remaining_ignored_rules)
 
-    build_source += _append_newline(output_extension.footer)
+    # Add the footer, separated by a newline.
+    if output_extension.footer:
+        output += 2*'\n' + _append_newline(output_extension.footer)
 
     with open(build_file_path, 'w') as build_file:
-        build_file.write(build_source)
+        output = _append_newline(output)
+        build_file.write(output)
