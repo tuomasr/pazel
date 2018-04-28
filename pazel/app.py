@@ -48,9 +48,15 @@ def app(input_path, project_root, contains_pre_installed_packages):
                 # If a Python file is met and it is not in the list of ignored rules,
                 # generate a Bazel rule for it.
                 if is_python_file(path) and not is_ignored(path, ignored_rules):
-                    build_source += parse_script_and_generate_rule(path, project_root,
-                                                                   contains_pre_installed_packages)
-                    build_source += 2*'\n'  # Add newline between rules.
+                    new_rule = parse_script_and_generate_rule(path, project_root,
+                                                              contains_pre_installed_packages)
+
+                    # Add the new rule and a newline between it and any previous rules.
+                    if new_rule:
+                        if build_source:
+                            build_source += 2*'\n'
+
+                        build_source += new_rule
 
             # If Python files were found, output the BUILD file.
             if build_source != '':
