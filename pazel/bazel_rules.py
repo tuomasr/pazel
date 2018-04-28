@@ -72,6 +72,11 @@ class BazelRule(object):
 
         return match
 
+    @staticmethod
+    def get_load_statement():
+        """If the rule requires a special 'load' statement, return it, otherwise return None."""
+        return None
+
 
 class PyBinaryRule(BazelRule):
     """Class for representing Bazel-native py_binary."""
@@ -175,7 +180,7 @@ def infer_bazel_rule_type(script_path, script_source, custom_rules):
         custom_rules (list of BazelRule classes): User-defined classes implementing BazelRule.
 
     Returns:
-        bazel_rule_type (BaseRule): Rule object representing the type of the Python script.
+        bazel_rule_type (BazelRule): Rule object representing the type of the Python script.
 
     Raises:
         RuntimeError: If zero or more than one Bazel rule is found for the current script.
