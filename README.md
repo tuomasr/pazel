@@ -101,7 +101,15 @@ should define `EXTRA_IMPORT_NAME_TO_PIP_NAME` dictionary accordingly. `sample_ap
 `{'yaml': 'pyyaml'}` as an example. In addition, the user can specify local packages and their
 corresponding Bazel dependencies using the `EXTRA_LOCAL_IMPORT_NAME_TO_DEP` dictionary.
 
-The user can define custom Bazel rules by defining a new class implementing the `BazelRule`
-interface in `pazel/bazel_rules.py` and by adding the class to `EXTRA_RULES` list in `.pazelrc`.
-`sample_app/.pazelrc` defines a custom `PyDoctestRule` class that identifies all doctests and
-generates custom `py_doctest` Bazel rules for them as defined in `sample_app/custom_rules.bzl`.
+The user can add support for custom Bazel rules by defining a new class implementing the `BazelRule`
+interface in `pazel/bazel_rules.py` and by adding that class to `EXTRA_BAZEL_RULES` list in
+`.pazelrc`. `sample_app/.pazelrc` defines a custom `PyDoctestRule` class that identifies all
+doctests and generates custom `py_doctest` Bazel rules for them as defined in
+`sample_app/custom_rules.bzl`.
+
+In addition, the user can implement custom rules for mapping Python imports to Bazel dependencies
+that are not natively supported. That is achieved by defining a new class implementing the
+`InferenceImportRule` interface in `pazel/import_inference_rules.py` and by adding the class to
+`EXTRA_IMPORT_INFERENCE_RULES` list in `.pazelrc`. `sample_app/.pazelrc` defines a custom
+`LocalImportAllInferenceRule` class that generates the correct Bazel dependencies for
+`from X import *` type of imports where `X` is a local package.

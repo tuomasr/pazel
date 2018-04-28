@@ -39,6 +39,8 @@ def parse_pazel_extensions(directory):
     Returns:
         output_extension (OutputExtension): Object containing user-defined header and footer.
         custom_bazel_rules (list of BazelRule classes): Custom BazelRule classes.
+        custom_import_inference_rules (list of ImportInferenceRule classes): Custom classes
+            for inferring import types.
         import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
         local_import_name_to_dep (dict): Mapping from local package import name to its Bazel
             dependency.
@@ -73,8 +75,13 @@ def parse_pazel_extensions(directory):
     output_extension = OutputExtension(header, footer)
 
     # Read user-defined BazelRule classes.
-    custom_bazel_rules = getattr(pazelrc, 'EXTRA_RULES', [])
-    assert isinstance(custom_bazel_rules, list), "EXTRA_RULES must be a list."
+    custom_bazel_rules = getattr(pazelrc, 'EXTRA_BAZEL_RULES', [])
+    assert isinstance(custom_bazel_rules, list), "EXTRA_BAZEL_RULES must be a list."
+
+    # Read user-defined ImportInferenceRule classes.
+    custom_import_inference_rules = getattr(pazelrc, 'EXTRA_IMPORT_INFERENCE_RULES', [])
+    assert isinstance(custom_import_inference_rules, list), \
+        "EXTRA_IMPORT_INFERENCE_RULES must be a list."
 
     # Read user-defined mapping from package import names to pip package names.
     import_name_to_pip_name = getattr(pazelrc, 'EXTRA_IMPORT_NAME_TO_PIP_NAME', dict())
@@ -86,4 +93,5 @@ def parse_pazel_extensions(directory):
     assert isinstance(local_import_name_to_dep, dict), \
         "EXTRA_LOCAL_IMPORT_NAME_TO_DEP must be a dictionary."
 
-    return output_extension, custom_bazel_rules, import_name_to_pip_name, local_import_name_to_dep
+    return output_extension, custom_bazel_rules, custom_import_inference_rules, \
+        import_name_to_pip_name, local_import_name_to_dep

@@ -1,4 +1,4 @@
-"""Classes for identifying Bazel rule type of a script and generating rule templates."""
+"""Classes for identifying Bazel rule type of a script and generating new rules to BUILD files."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -44,7 +44,15 @@ class BazelRule(object):
 
     @staticmethod
     def applies_to(script_name, script_source):
-        """Check whether this rule applies to a given script."""
+        """Check whether this rule applies to a given script.
+
+        Args:
+            script_name (str): Name of a Python script without the .py suffix.
+            script_source (str): Source code of the script.
+
+        Returns:
+            applies (bool): Whether this Bazel rule can be used to represent the script.
+        """
         raise NotImplementedError()
 
     @staticmethod

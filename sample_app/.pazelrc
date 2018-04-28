@@ -4,6 +4,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import os
 import re
 
 from pazel.bazel_rules import BazelRule
@@ -48,8 +49,50 @@ class PyDoctestRule(BazelRule):
         return imports_doctest
 
 
-# Add custom Rule classes to this list so that pazel registers them.
-EXTRA_RULES = [PyDoctestRule]
+class LocalImportAllInferenceRule(object):
+    """Import inference rule for "from some_local_package import *" type of imports.
+
+    The rule is not recursive so only modules in the first level will be imported.
+    """
+
+    @staticmethod
+    def holds(project_root, base, unknown):
+        """Check if base is a local package and unknown is '*'.
+
+        Args:
+            project_root (str): Local imports are assumed to be relative to this path.
+            base (str): Name of a package or a module.
+            unknown (str): Can package, module, function or any other object.
+
+        Returns:
+            packages (None): The rule applies only to modules.
+            modules (list of str or None): The imported modules. None if the rule does not match.
+        """
+        packages = None
+        modules = None
+
+        # Check if 'base' is a local package.
+        package_path = os.path.join(project_root, base.replace('.', '/'))
+        base_is_package = os.path.isdir(package_path)
+
+        if base_is_package and unknown == '*':
+            python_filenames = [f.replace('.py', '') for f in os.listdir(package_path)
+                                if f.endswith('.py')]
+
+            modules = []
+
+            for python_filename in python_filenames:
+                dotted_path = base + '.%s' % python_filename
+                modules.append(dotted_path)
+
+        return packages, modules
+
+
+# Add custom classes implementing BazelRule to this list so that pazel registers them.
+EXTRA_BAZEL_RULES = [PyDoctestRule]
+
+# Add custom import inference classes implementing ImportInferenceRule to this list.
+EXTRA_IMPORT_INFERENCE_RULES = [LocalImportAllInferenceRule]
 
 # Map import name to pip install name, if they differ.
 EXTRA_IMPORT_NAME_TO_PIP_NAME = {'yaml': 'pyyaml'}
