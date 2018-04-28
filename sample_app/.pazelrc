@@ -55,4 +55,4 @@ EXTRA_RULES = [PyDoctestRule]
 EXTRA_IMPORT_NAME_TO_PIP_NAME = {'yaml': 'pyyaml'}
 
 # Map local package import name to its Bazel dependency.
-EXTRA_LOCAL_IMPORT_NAME_TO_DEP = dict()
+EXTRA_LOCAL_IMPORT_NAME_TO_DEP = {'my_dummy_package': '//my_dummy_package'}

@@ -15,7 +15,7 @@ def find_existing_rule(build_file_path, script_filename, bazel_rule_type):
 
     Args:
         build_file_path (str): Path to an existing BUILD file that may contain a rule for a given
-        Python script.
+            Python script.
         script_filename (str): File name of the Python script.
         bazel_rule_type (Rule class): pazel-native or a custom class implementing BazelRule.
 
@@ -128,7 +128,7 @@ def get_ignored_rules(build_file_path):
 
     Returns:
         ignored_rules (list of str): Ignored Bazel rule(s). Empty list if no ignored rules were
-        found or if the Bazel BUILD does not exist.
+            found or if the Bazel BUILD does not exist.
     """
     try:
         with open(build_file_path, 'r') as build_file:

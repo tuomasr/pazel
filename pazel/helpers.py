@@ -35,7 +35,7 @@ def get_build_file_path(path):
 
     Returns
         build_file_path (str): Path to the BUILD in the given directory or in the directory
-        containing the given file.
+            containing the given file.
     """
     if os.path.isdir(path):
         directory = path
@@ -147,8 +147,7 @@ def is_installed(module, some_object=None, contains_pre_installed_packages=False
     Args:
         module (str): Name of a module.
         some_object (str): Name of some object in the module. Can be None.
-        contains_pre_installed_packages (bool): Whether the environment contains external packages
-        or not.
+        contains_pre_installed_packages (bool): Whether the environment contains external packages.
 
     Returns:
         installed (bool): The module is installed in the current environment.

@@ -13,13 +13,8 @@ from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
 
-# Map external package import name to pip installation name ({'yaml': 'pyyaml'}, for example).
-IMPORT_NAME_TO_PIP_NAME = {}
-# Map local package import name to Bazel dependency name ({'mypackage': '//mypackage'}).
-LOCAL_IMPORT_NAME_TO_DEP = {}
-
-
-def generate_rule(script_path, template, package_names, module_names, data_deps, test_size):
+def generate_rule(script_path, template, package_names, module_names, data_deps, test_size,
+                  import_name_to_pip_name, local_import_name_to_dep):
     """Generate a Bazel Python rule given the type of the Python file and imports in it.
 
     Args:
@@ -29,6 +24,9 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
         module_names (set of str): Set of imported module names in dotted notation (pkg.module)
         data_deps (str): Data dependencies parsed from an existing BUILD file.
         test_size (str): Test size parsed from an existing BUILD file.
+        import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
+        local_import_name_to_dep (dict): Mapping from local package import name to its Bazel
+            dependency.
 
     Returns:
         rule (str): Bazel rule generated for the current Python script.
@@ -74,19 +72,19 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     package_names = set([p.split('.')[0] for p in package_names])
 
     # Split packages to local and external.
-    local_packages = [p for p in package_names if p in LOCAL_IMPORT_NAME_TO_DEP]
-    external_packages = [p for p in package_names if p not in LOCAL_IMPORT_NAME_TO_DEP]
+    local_packages = [p for p in package_names if p in local_import_name_to_dep]
+    external_packages = [p for p in package_names if p not in local_import_name_to_dep]
 
     for package_set in (local_packages, external_packages):     # List local packages first.
         for package_name in sorted(list(package_set)):
             if multiple_deps:
                 deps += 2*tab
 
-            if package_name in LOCAL_IMPORT_NAME_TO_DEP:    # Local package.
-                package_name = LOCAL_IMPORT_NAME_TO_DEP[package_name]
+            if package_name in local_import_name_to_dep:    # Local package.
+                package_name = local_import_name_to_dep[package_name]
                 deps += '\"' + package_name + '\"'
             else:   # External/pip installable package.
-                package_name = IMPORT_NAME_TO_PIP_NAME.get(package_name, package_name)
+                package_name = import_name_to_pip_name.get(package_name, package_name)
                 package_name = 'requirement(\"%s\")' % package_name
                 deps += package_name
 
@@ -106,14 +104,20 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     return rule
 
 
-def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages):
+def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages,
+                                   custom_bazel_rules, import_name_to_pip_name,
+                                   local_import_name_to_dep):
     """Generate Bazel Python rule for a Python script.
 
     Args:
         script_path (str): Path to a Python file for which the Bazel rule is generated.
         project_root (str): Imports in the Python script are assumed to be relative to this path.
         contains_pre_installed_packages (bool): Environment contains pre-installed packages (true)
-        or only the standard library (false).
+            or only the standard library (false).
+        custom_bazel_rules (list of BazelRule classes): Custom rule classes implementing BazelRule.
+        import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
+        local_import_name_to_dep (dict): Mapping from local package import name to its Bazel
+            dependency.
 
     Returns:
         rule (str): Bazel rule generated for the Python script.
@@ -130,7 +134,7 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
                                                     contains_pre_installed_packages)
 
     # Infer the Bazel rule type for the script.
-    bazel_rule_type = infer_bazel_rule_type(script_path, script_source)
+    bazel_rule_type = infer_bazel_rule_type(script_path, script_source, custom_bazel_rules)
 
     # Data dependencies or test size cannot be inferred from the script source code currently.
     # Use information in any existing BUILD files.
@@ -139,6 +143,6 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
 
     # Generate the Bazel Python rule based on the gathered information.
     rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
-                         data_deps, test_size)
+                         data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
 
     return rule

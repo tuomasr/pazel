@@ -8,10 +8,6 @@ import ast
 import imp
 import os
 
-from pazel.bazel_rules import REGISTERED_RULES  # noqa
-from pazel.generate_rule import IMPORT_NAME_TO_PIP_NAME     # noqa
-from pazel.generate_rule import LOCAL_IMPORT_NAME_TO_DEP    # noqa
-
 
 PAZELRC_FILE = '.pazelrc'
 
@@ -42,6 +38,10 @@ def parse_pazel_extensions(directory):
 
     Returns:
         output_extension (OutputExtension): Object containing user-defined header and footer.
+        custom_bazel_rules (list of BazelRule classes): Custom BazelRule classes.
+        import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
+        local_import_name_to_dep (dict): Mapping from local package import name to its Bazel
+            dependency.
 
     Raises:
         SyntaxError: If the .pazelrc contains invalid Python syntax.
@@ -67,27 +67,23 @@ def parse_pazel_extensions(directory):
     header = getattr(pazelrc, 'HEADER', '')
     footer = getattr(pazelrc, 'FOOTER', '')
 
+    assert isinstance(header, str), "HEADER must be a string."
+    assert isinstance(footer, str), "FOOTER must be a string."
+
     output_extension = OutputExtension(header, footer)
 
-    # Read user-defined pazel Rule classes.
-    user_defined_bazel_rules = getattr(pazelrc, 'EXTRA_RULES', [])
-
-    # Update the list of registered rules. TODO: Remove global.
-    global REGISTERED_RULES
-    REGISTERED_RULES += user_defined_bazel_rules
+    # Read user-defined BazelRule classes.
+    custom_bazel_rules = getattr(pazelrc, 'EXTRA_RULES', [])
+    assert isinstance(custom_bazel_rules, list), "EXTRA_RULES must be a list."
 
     # Read user-defined mapping from package import names to pip package names.
-    user_defined_pip_import_mapping = getattr(pazelrc, 'EXTRA_IMPORT_NAME_TO_PIP_NAME', dict())
-
-    # Update the corresponding mapping. TODO: Remove global.
-    global IMPORT_NAME_TO_PIP_NAME
-    IMPORT_NAME_TO_PIP_NAME.update(user_defined_pip_import_mapping)
+    import_name_to_pip_name = getattr(pazelrc, 'EXTRA_IMPORT_NAME_TO_PIP_NAME', dict())
+    assert isinstance(import_name_to_pip_name, dict), \
+        "EXTRA_IMPORT_NAME_TO_PIP_NAME must be a dictionary."
 
     # Read user-defined mapping from local import names to their Bazel dependencies.
-    user_defined_local_dep_mapping = getattr(pazelrc, 'EXTRA_LOCAL_IMPORT_NAME_TO_DEP', dict())
+    local_import_name_to_dep = getattr(pazelrc, 'EXTRA_LOCAL_IMPORT_NAME_TO_DEP', dict())
+    assert isinstance(local_import_name_to_dep, dict), \
+        "EXTRA_LOCAL_IMPORT_NAME_TO_DEP must be a dictionary."
 
-    # Update the corresponding mapping. TODO: Remove global.
-    global LOCAL_IMPORT_NAME_TO_DEP
-    LOCAL_IMPORT_NAME_TO_DEP.update(user_defined_local_dep_mapping)
-
-    return output_extension
+    return output_extension, custom_bazel_rules, import_name_to_pip_name, local_import_name_to_dep

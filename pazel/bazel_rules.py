@@ -153,16 +153,18 @@ class PyTestRule(BazelRule):
         return applies
 
 
-PAZEL_NATIVE_RULES = [PyBinaryRule, PyLibraryRule, PyTestRule]  # No custom rules here.
-REGISTERED_RULES = PAZEL_NATIVE_RULES[:]
+def get_native_bazel_rules():
+    """Return a copy of the pazel-native classes implementing BazelRule."""
+    return [PyBinaryRule, PyLibraryRule, PyTestRule]    # No custom classes here.
 
 
-def infer_bazel_rule_type(script_path, script_source):
+def infer_bazel_rule_type(script_path, script_source, custom_rules):
     """Infer the Bazel rule type given the path to the script and its source code.
 
     Args:
         script_path (str): Path to a Python script.
         script_source (str): Source code of the Python script.
+        custom_rules (list of BazelRule classes): User-defined classes implementing BazelRule.
 
     Returns:
         bazel_rule_type (BaseRule): Rule object representing the type of the Python script.
@@ -174,7 +176,10 @@ def infer_bazel_rule_type(script_path, script_source):
 
     bazel_rule_types = []
 
-    for bazel_rule in REGISTERED_RULES:
+    native_rules = get_native_bazel_rules()
+    registered_rules = native_rules + custom_rules
+
+    for bazel_rule in registered_rules:
         if bazel_rule.applies_to(script_name, script_source):
             bazel_rule_types.append(bazel_rule)
 
@@ -183,7 +188,7 @@ def infer_bazel_rule_type(script_path, script_source):
     elif len(bazel_rule_types) > 1:
         # If the script is recognized by pazel native rule(s) and one exactly custom rule, then use
         # the custom rule. This is because the pazel native rules may generate false positives.
-        is_custom = [rule not in PAZEL_NATIVE_RULES for rule in bazel_rule_types]
+        is_custom = [rule not in native_rules for rule in bazel_rule_types]
         one_custom = sum(is_custom) == 1
 
         if one_custom:

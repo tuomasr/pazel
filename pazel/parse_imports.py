@@ -20,7 +20,7 @@ def get_imports(script_source):
     Returns:
         packages (list of tuple): List of (package name, None) tuples.
         from_imports (list of tuple): List of (package/module name, some object) tuples. Note that
-        some object can be a function, object, module, or package.
+            some object can be a function, object, module, or package.
     """
     packages = []
     from_imports = []
@@ -50,8 +50,7 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
     Args:
         all_imports (list of tuple): All imports in a Python script.
         project_root (str): Local imports are assumed to be relative to this path.
-        contains_pre_installed_packages (bool): Whether the environment contains external packages
-        or not.
+        contains_pre_installed_packages (bool): Whether the environment contains external packages.
 
     Returns:
         packages: Set of package names that are imported.
