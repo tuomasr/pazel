@@ -6,7 +6,6 @@ from __future__ import print_function
 
 import ast
 import imp
-import os
 
 
 class OutputExtension(object):
