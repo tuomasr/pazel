@@ -78,6 +78,8 @@ Use `pazel -r <some_path>` to override the path to which the imports are relativ
 By default, `pazel` adds rules to install all external Python packages. If your environment has
 pre-installed packages for which these rules are not required, then use `pazel -p`.
 
+`pazel` config file `.pazelrc` is read from the current working directory. Use
+`pazel -c <pazelrc_path>` to specify an alternative path.
 
 ### Ignoring rules in existing BUILD files
 
