@@ -1,5 +1,14 @@
 """Define pazel extensions for this directory and its subdirectories."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+import re
+
+from pazel.bazel_rules import BazelRule
+
+
 HEADER = """package(default_visibility = ["//visibility:public"])"""
 
 FOOTER = """# My footer"""
@@ -12,10 +21,11 @@ PY_DOCTEST_TEMPLATE = """py_doctest(
     {data}
 )"""
 
-import re
+class PyDoctestRule(BazelRule):
+    """Class for representing custom Bazel rule py_doctest as defined in custom_rules.bzl.
 
-class PyDoctestRule(object):
-    """Class for representing custom Bazel rule py_doctest as defined in custom_rules.bzl."""
+    Note that custom rules need to implement the interface defined by BazelRule.
+    """
 
     # Required class variables.
     is_test_rule = True     # Is this a test rule?

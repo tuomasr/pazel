@@ -31,7 +31,41 @@ PY_TEST_TEMPLATE = """py_test(
 )"""
 
 
-class PyBinaryRule(object):
+class BazelRule(object):
+    """Base class defining the interface for parsing Bazel rules.
+
+    pazel-native rule classes as well as custom rule classes need to implement this interface.
+    """
+
+    # Required class variables.
+    is_test_rule = None
+    template = None
+    rule_identifier = None
+
+    @staticmethod
+    def applies_to(script_name, script_source):
+        """Check whether this rule applies to a given script."""
+        raise NotImplementedError()
+
+    @staticmethod
+    def find_existing(build_source, script_filename):
+        """Find existing rule for a given script.
+
+        Args:
+            build_source (str): Source code of an existing BUILD file.
+            script_filename (str): Name of a Python script.
+
+        Returns:
+            match (MatchObject or None): Match found in the BUILD file or None if no matches.
+        """
+        # 'srcs' should contain the script filename.
+        pattern = 'srcs\s*=\s*\["' + script_filename + '"\]'
+        match = re.search(pattern, build_source)
+
+        return match
+
+
+class PyBinaryRule(BazelRule):
     """Class for representing Bazel-native py_binary."""
 
     # Required class variables.
@@ -62,7 +96,7 @@ class PyBinaryRule(object):
         return applies
 
 
-class PyLibraryRule(object):
+class PyLibraryRule(BazelRule):
     """Class for representing Bazel-native py_library."""
 
     # Required class variables.
@@ -89,7 +123,7 @@ class PyLibraryRule(object):
         return applies
 
 
-class PyTestRule(object):
+class PyTestRule(BazelRule):
     """Class for representing Bazel-native py_test."""
 
     # Required class variables.
