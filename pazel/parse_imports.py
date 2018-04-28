@@ -65,7 +65,29 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
         if is_installed(base, unknown, contains_pre_installed_packages):
             continue
 
-        # By default, assume that 'base' is a module and 'unknown' is function, variable or any
+        # Prioritize custom inference rules used for parsing imports that pazel does not support.
+        # These custom rules define how a Python import is mapped to Bazel dependencies.
+        custom_rule_matches = False
+
+        for inference_rule in custom_rules:
+            new_packages, new_modules = inference_rule.holds(project_root, base, unknown)
+
+            # If the rule holds, then add to the list of packages and/or modules.
+            if new_packages is not None:
+                packages.extend(new_packages)
+
+            if new_modules is not None:
+                modules.extend(new_modules)
+
+            if new_packages is not None or new_modules is not None:
+                custom_rule_matches = True  # Only allow one match for custom rules.
+                break
+
+        # One custom rule matched, continue to the next import.
+        if custom_rule_matches:
+            continue
+
+        # Then, assume that 'base' is a module and 'unknown' is function, variable or any
         # other object in that module.
         module_path = os.path.join(project_root, base.replace('.', '/') + '.py')
         if os.path.exists(module_path):
@@ -96,28 +118,6 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
         package_path = os.path.join(project_root, base.replace('.', '/'))
         if os.path.isdir(package_path) and _in_public_interface(package_path, unknown):
             modules.append(base + '.__init__')
-            continue
-
-        # Loop custom inference rules used for parsing imports that pazel does not support.
-        # These custom rules define how a Python import is mapped to Bazel dependencies.
-        custom_rule_matches = False
-
-        for inference_rule in custom_rules:
-            new_packages, new_modules = inference_rule.holds(project_root, base, unknown)
-
-            # If the rule holds, then add to the list of packages and/or modules.
-            if new_packages is not None:
-                packages.extend(new_packages)
-
-            if new_modules is not None:
-                modules.extend(new_modules)
-
-            if new_packages is not None or new_modules is not None:
-                custom_rule_matches = True  # Only allow one match for custom rules.
-                break
-
-        # One custom rule matched, continue to the next import.
-        if custom_rule_matches:
             continue
 
         # Finally, assume that base is either a pip installable or a local package.

@@ -5,23 +5,22 @@ from __future__ import division
 from __future__ import print_function
 
 
-# Used for installing pip packages. See https://github.com/bazelbuild/rules_python
-REQUIREMENT = """load("@my_deps//:requirements.bzl", "requirement")"""
-
-
 def _append_newline(source):
     """Add newline to a string if it does not end with a newline."""
     return source if source.endswith('\n') else source + '\n'
 
 
-def output_build_file(build_source, ignored_rules, output_extension, build_file_path):
+def output_build_file(build_source, ignored_rules, output_extension, custom_bazel_rules,
+                      build_file_path, requirement_load):
     """Output a BUILD file.
 
     Args:
         build_source (str): The contents of the BUILD file to output.
         ignored_rules (list of str): Rules the user wants to keep as is.
         output_extension (OutputExtension): User-defined header and footer.
+        custom_bazel_rules (list of BazelRule classes): User-defined BazelRule classes.
         build_file_path (str): Path to the BUILD file in which build_source is written.
+        requirement_load (str): Statement for loading the 'requirement' rule.
     """
     header = ''
 
@@ -30,7 +29,12 @@ def output_build_file(build_source, ignored_rules, output_extension, build_file_
 
     # If the BUILD file contains external packages, add the Bazel method for installing them.
     if 'requirement("' in build_source:
-        header += _append_newline(REQUIREMENT)
+        header += _append_newline(requirement_load)
+
+    # If the BUILD file contains custom Bazel rules, then add the load statements for them.
+    for custom_rule in custom_bazel_rules:
+        if custom_rule.rule_identifier in build_source:
+            header += _append_newline(custom_rule.get_load_statement())
 
     # Add ignored load statements right after the header.
     remaining_ignored_rules = []

@@ -48,6 +48,11 @@ class PyDoctestRule(BazelRule):
 
         return imports_doctest
 
+    @staticmethod
+    def get_load_statement():
+        """Return the load statement required for using this rule."""
+        return 'load("//:custom_rules.bzl", "py_doctest")'
+
 
 class LocalImportAllInferenceRule(object):
     """Import inference rule for "from some_local_package import *" type of imports.
@@ -99,3 +104,7 @@ EXTRA_IMPORT_NAME_TO_PIP_NAME = {'yaml': 'pyyaml'}
 
 # Map local package import name to its Bazel dependency.
 EXTRA_LOCAL_IMPORT_NAME_TO_DEP = {'my_dummy_package': '//my_dummy_package'}
+
+# Change 'REQUIREMENT' to override the default load statement of the Bazel rule for
+# installing pip packages. See https://github.com/bazelbuild/rules_python
+REQUIREMENT = """load("@my_deps//:requirements.bzl", "requirement")"""
