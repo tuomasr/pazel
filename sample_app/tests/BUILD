@@ -1,7 +1,5 @@
 package(default_visibility = ["//visibility:public"])
 load("@my_deps//:requirements.bzl", "requirement")
-
-# pazel-ignore
 load("//:custom_rules.bzl", "py_doctest")
 
 py_library(
