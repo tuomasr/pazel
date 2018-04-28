@@ -61,8 +61,5 @@ py_library(
 py_library(
     name = "pazel_extensions",
     srcs = ["pazel_extensions.py"],
-    deps = [
-        ":bazel_rules",
-        ":generate_rule",
-    ],
+    deps = [],
 )

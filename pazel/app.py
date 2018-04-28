@@ -24,13 +24,14 @@ def app(input_path, project_root, contains_pre_installed_packages):
         which BUILD files are generated.
         project_root (str): Imports in the Python files are relative to this path.
         contains_pre_installed_packages (bool): Whether the environment is allowed to contain
-        pre-installed packages or whether only the Python standard library is available.
+            pre-installed packages or whether only the Python standard library is available.
 
     Raises:
         RuntimeError: input_path does is not a directory or a Python file.
     """
     # Parse user-defined extensions to pazel.
-    output_extension = parse_pazel_extensions(project_root)
+    output_extension, custom_bazel_rules, import_name_to_pip_name, local_import_name_to_dep = \
+        parse_pazel_extensions(project_root)
 
     # Handle directories.
     if os.path.isdir(input_path):
@@ -49,7 +50,10 @@ def app(input_path, project_root, contains_pre_installed_packages):
                 # generate a Bazel rule for it.
                 if is_python_file(path) and not is_ignored(path, ignored_rules):
                     new_rule = parse_script_and_generate_rule(path, project_root,
-                                                              contains_pre_installed_packages)
+                                                              contains_pre_installed_packages,
+                                                              custom_bazel_rules,
+                                                              import_name_to_pip_name,
+                                                              local_import_name_to_dep)
 
                     # Add the new rule and a newline between it and any previous rules.
                     if new_rule:
@@ -70,7 +74,10 @@ def app(input_path, project_root, contains_pre_installed_packages):
         # Check that the script is not in the list of ignored rules.
         if not is_ignored(input_path, ignored_rules):
             build_source = parse_script_and_generate_rule(input_path, project_root,
-                                                          contains_pre_installed_packages)
+                                                          contains_pre_installed_packages,
+                                                          custom_bazel_rules,
+                                                          import_name_to_pip_name,
+                                                          local_import_name_to_dep)
 
             output_build_file(build_source, ignored_rules, output_extension, build_file_path)
     else:
