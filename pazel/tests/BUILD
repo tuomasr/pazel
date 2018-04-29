@@ -12,3 +12,17 @@ py_test(
     size = "small",
     deps = ["//pazel:helpers"],
 )
+
+py_test(
+    name = "test_parse_imports",
+    srcs = ["test_parse_imports.py"],
+    size = "small",
+    deps = ["//pazel:parse_imports"],
+)
+
+py_test(
+    name = "test_pazel_extensions",
+    srcs = ["test_pazel_extensions.py"],
+    size = "small",
+    deps = ["//pazel:pazel_extensions"],
+)

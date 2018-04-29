@@ -36,7 +36,12 @@ def find_existing_rule(build_file_path, script_filename, bazel_rule_type):
         return None
 
     # Find the start of the rule.
-    start = build_source.rfind(bazel_rule_type.rule_identifier, 0, match.start())
+    rule_identifier = bazel_rule_type.rule_identifier
+    start = match.start()
+
+    # If the match is not the beginning of the rule, then go backwards to the start of the rule.
+    if build_source[start:start + len(rule_identifier)] != rule_identifier:
+        start = build_source.rfind(bazel_rule_type.rule_identifier, 0, start)
 
     assert start != -1, "The start of the Bazel Python rule for %s not located." % script_filename
 
