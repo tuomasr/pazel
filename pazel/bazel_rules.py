@@ -8,26 +8,27 @@ import os
 import re
 
 # These templates will be filled and used to generate BUILD files.
+# Note that both 'data' and 'deps' can be empty in which case they are left out from the rules.
 PY_BINARY_TEMPLATE = """py_binary(
     name = "{name}",
     srcs = ["{name}.py"],
-    deps = [{deps}],
     {data}
+    {deps}
 )"""
 
 PY_LIBRARY_TEMPLATE = """py_library(
     name = "{name}",
     srcs = ["{name}.py"],
-    deps = [{deps}],
     {data}
+    {deps}
 )"""
 
 PY_TEST_TEMPLATE = """py_test(
     name = "{name}",
     srcs = ["{name}.py"],
     size = "{size}",
-    deps = [{deps}],
     {data}
+    {deps}
 )"""
 
 

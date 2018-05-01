@@ -1,22 +1,22 @@
 package(default_visibility = ["//visibility:public"])
+
 load("@my_deps//:requirements.bzl", "requirement")
 load("//:custom_rules.bzl", "py_doctest")
 
 py_library(
     name = "__init__",
     srcs = ["__init__.py"],
-    deps = [],
 )
 
 py_test(
     name = "test_bar1",
     srcs = ["test_bar1.py"],
     size = "medium",
+    data = ["test_data/dummy"],
     deps = [
         "//foo:bar1",
         requirement("requests"),
     ],
-    data = ["test_data/dummy"]
 )
 
 py_test(
@@ -30,8 +30,7 @@ py_test(
     name = "test_bar3",
     srcs = ["test_bar3.py"],
     size = "small",
-    deps = [],
-    data = glob(["test_data/*.png"])
+    data = glob(["test_data/*.png"]),
 )
 
 py_doctest(

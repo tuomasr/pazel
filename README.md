@@ -119,3 +119,10 @@ that are not natively supported. That is achieved by defining a new class implem
 `EXTRA_IMPORT_INFERENCE_RULES` list in `.pazelrc`. `sample_app/.pazelrc` defines a custom
 `LocalImportAllInferenceRule` class that generates the correct Bazel dependencies for
 `from X import *` type of imports where `X` is a local package.
+
+
+## BUILD file formatting
+
+`pazel` generates BUILD files that are nearly compatible with
+[Buildifier](https://github.com/bazelbuild/buildtools/tree/master/buildifier). Buildifier can be
+applied on `pazel`-generated BUILD files to remove the remaining differences, if needed.

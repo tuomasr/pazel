@@ -4,6 +4,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import re
+
 
 def _append_newline(source):
     """Add newline to a string if it does not end with a newline."""
@@ -80,4 +82,8 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
 
     with open(build_file_path, 'w') as build_file:
         output = _append_newline(output)
+
+        # Remove possible duplicate newlines (the user may have added such accidentally).
+        output = re.sub('\n\n\n*', '\n\n', output)
+
         build_file.write(output)

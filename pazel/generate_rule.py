@@ -13,6 +13,67 @@ from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
 
 
+def _walk_modules(current_dir, modules):
+    """Walk modules in different directories.
+
+    This function is similar to os.walk but it returns module names in a sorted order.
+
+    Args:
+        current_dir (str): Current directory that contains one or many modules.
+        modules (list of str): List of modules in current_dir or in its subdirectories.
+
+    Yields:
+        sorted list of module names in a directory.
+    """
+    modules_in_current_dir, remaining_modules, subdirs = [], [], []
+
+    for module in modules:
+        # Map e.g. "foo.abc" and "foo.abc.xyz" to "abc" and "abc.xyz", respectively.
+        remaining_module_name = module.replace(current_dir, '').split('.')
+
+        is_in_current_dir = len(remaining_module_name) == 1
+
+        if is_in_current_dir:
+            modules_in_current_dir.append(module)
+        else:
+            remaining_modules.append(module)
+            subdirs.append(remaining_module_name[0])
+
+    # Modules in the current directory precede modules in subdirectories.
+    yield sorted(modules_in_current_dir)
+
+    # Recurse modules in subdirectories.
+    sorted_subdirs = sorted(list(set(subdirs)))
+
+    for subdir in sorted_subdirs:
+        next_dir = current_dir + subdir + '.' if current_dir else subdir + '.'
+        # Consider only modules in the current subdirectory.
+        remaining_modules_in_next_dir = [module for module in remaining_modules if
+                                         next_dir in module]
+
+        for x in _walk_modules(next_dir, remaining_modules_in_next_dir):
+            yield x
+
+
+def sort_module_names(module_names):
+    """Sort modules alphabetically but so that modules in a directory precede modules in subdirs.
+
+    For example, modules ["xyz", "abc", "foo.bar1"] are sorted to ["abc", "xyz", "foo.bar1"].
+
+    Args:
+        module_names (list of str): List of module names in dotted notation ("foo.bar.xyz").
+
+    Returns:
+        sorted_modules_names (list of str): List of sorted module names.
+    """
+    sorted_module_names = []
+
+    for module_name in _walk_modules('', module_names):
+        sorted_module_names += module_name
+
+    return sorted_module_names
+
+
 def generate_rule(script_path, template, package_names, module_names, data_deps, test_size,
                   import_name_to_pip_name, local_import_name_to_dep):
     """Generate a Bazel Python rule given the type of the Python file and imports in it.
@@ -49,7 +110,8 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     if multiple_deps:
         deps += '\n'
 
-    for module_name in sorted(list(module_names)):
+    for module_name in sort_module_names(list(module_names)):
+        # Import from the same directory as the script resides.
         if '.' not in module_name:
             module_name = ':' + module_name
         else:
@@ -94,7 +156,10 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     if multiple_deps:
         deps += tab
 
-    data = data_deps if data_deps is not None else ''
+    if deps:
+        deps = 'deps = [{deps}],'.format(deps=deps)
+
+    data = data_deps + ',' if data_deps is not None else ''
     size = test_size if test_size is not None else 'small'  # If size not given, assume small.
 
     rule = template.format(name=script_name, deps=deps, data=data, size=size)
