@@ -3,7 +3,10 @@ package(default_visibility = ["//visibility:public"])
 py_binary(
     name = "abc1",
     srcs = ["abc1.py"],
-    deps = ["//foo:__init__"],
+    deps = [
+        "//foo:__init__",
+        "//foo:foo",
+    ],
 )
 
 # My footer

@@ -1,4 +1,5 @@
 package(default_visibility = ["//visibility:public"])
+
 load("@my_deps//:requirements.bzl", "requirement")
 
 # pazel-ignore
@@ -28,13 +29,17 @@ py_library(
 py_binary(
     name = "bar3",
     srcs = ["bar3.py"],
-    deps = [],
 )
 
 py_library(
     name = "bar6",
     srcs = ["bar6.py"],
     deps = ["//xyz:abc1"],
+)
+
+py_library(
+    name = "foo",
+    srcs = ["foo.py"],
 )
 
 # pazel-ignore

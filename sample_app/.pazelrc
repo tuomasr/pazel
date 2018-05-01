@@ -10,7 +10,9 @@ import re
 from pazel.bazel_rules import BazelRule
 
 
-HEADER = """package(default_visibility = ["//visibility:public"])"""
+HEADER = """package(default_visibility = ["//visibility:public"])
+
+"""
 
 FOOTER = """# My footer"""
 
