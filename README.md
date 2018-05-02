@@ -95,8 +95,8 @@ for an example using the tag.
 
 ### Customizing and extending pazel
 
-`pazel` can be programmed using a `.pazelrc` Python file that should be located in the project root
-(defaults to the current working directory but can be changed with the flag `pazel -r <some_path>`).
+`pazel` can be programmed using a `.pazelrc` Python file, which is read from the current
+working directory or provided explicitly with `pazel -c <pazelrc_path>`.
 
 The user can define variables `HEADER` and `FOOTER` to add custom header and footer to
 all BUILD files, respectively. See `sample_app/.pazelrc` and `sample_app/BUILD` for an example that
