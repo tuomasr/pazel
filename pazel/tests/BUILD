@@ -7,6 +7,13 @@ py_library(
 )
 
 py_test(
+    name = "test_bazel_rules",
+    srcs = ["test_bazel_rules.py"],
+    size = "small",
+    deps = ["//pazel:bazel_rules"],
+)
+
+py_test(
     name = "test_generate_rule",
     srcs = ["test_generate_rule.py"],
     size = "small",
