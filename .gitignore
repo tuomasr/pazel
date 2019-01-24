@@ -1,1 +1,6 @@
 *.pyc
+bazel-bin
+bazel-genfiles
+bazel-out
+bazel-sample_app
+bazel-testlogs
