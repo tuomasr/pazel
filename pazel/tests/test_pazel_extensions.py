@@ -17,7 +17,8 @@ class TestParseImports(unittest.TestCase):
         pazelrc_path = 'fail'
 
         output_extension, custom_bazel_rules, custom_import_inference_rules, \
-            import_name_to_pip_name, local_import_name_to_dep, requirement_load \
+            import_name_to_pip_name, local_import_name_to_dep, requirement_load, \
+                build_file_name \
             = parse_pazel_extensions(pazelrc_path)
 
         self.assertEqual(output_extension.header, '')

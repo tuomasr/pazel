@@ -92,5 +92,10 @@ def parse_pazel_extensions(pazelrc_path):
 
     assert isinstance(requirement_load, str), "REQUIREMENT must be a string."
 
+    default_build_file_name = 'BUILD'
+    build_file_name = getattr(pazelrc, 'BUILD_FILE_NAME', default_build_file_name)
+    assert isinstance(build_file_name, str), "BUILD_FILE_NAME must be a string."
+
     return output_extension, custom_bazel_rules, custom_import_inference_rules, \
-        import_name_to_pip_name, local_import_name_to_dep, requirement_load
+        import_name_to_pip_name, local_import_name_to_dep, requirement_load, \
+        build_file_name
