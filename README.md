@@ -76,7 +76,7 @@ pre-installed packages for which these rules are not required, then use `pazel -
 ### Ignoring rules in existing BUILD files
 
 The tag `# pazel-ignore` causes `pazel` to ignore the rule that immediately follows the tag in an
-existing BUILD file. In particular, the tag can be used to skip custom rules that `pazel` does not 
+existing BUILD file. In particular, the tag can be used to skip custom rules that `pazel` does not
 handle. `pazel` places the ignored rules at the bottom of the BUILD file. See `sample_app/foo/BUILD`
 for an example using the tag.
 
@@ -89,6 +89,9 @@ working directory or provided explicitly with `pazel -c <pazelrc_path>`.
 The user can define variables `HEADER` and `FOOTER` to add custom header and footer to
 all BUILD files, respectively. See `sample_app/.pazelrc` and `sample_app/BUILD` for an example that
 adds the same `visibility` to all BUILD files.
+
+If you'd like to generate BUILD.bazel files, you can set the option:
+`BUILD_FILE_NAME = 'BUILD.bazel'`.
 
 If some pip package has different install name than import name, then the user
 should define `EXTRA_IMPORT_NAME_TO_PIP_NAME` dictionary accordingly. `sample_app/.pazelrc` has

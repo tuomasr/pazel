@@ -27,7 +27,7 @@ def contains_python_file(directory):
     return contains_py
 
 
-def get_build_file_path(path):
+def get_build_file_path(path, build_file_name):
     """Get path to a BUILD file next to a given path.
 
     Args:
@@ -40,9 +40,9 @@ def get_build_file_path(path):
     if os.path.isdir(path):
         directory = path
     else:
-        directory = os.path.dirpath(path)
+        directory = os.path.dirname(path)
 
-    build_file_path = os.path.join(directory, 'BUILD')
+    build_file_path = os.path.join(directory, build_file_name)
 
     return build_file_path
 
