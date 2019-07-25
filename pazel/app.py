@@ -32,7 +32,7 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
     """
     # Parse user-defined extensions to pazel.
     output_extension, custom_bazel_rules, custom_import_inference_rules, import_name_to_pip_name, \
-        local_import_name_to_dep, requirement_load = parse_pazel_extensions(pazelrc_path)
+        local_import_name_to_dep, requirement_load, build_file_name = parse_pazel_extensions(pazelrc_path)
 
     # Handle directories.
     if os.path.isdir(input_path):
@@ -41,7 +41,7 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
             build_source = ''
 
             # Parse ignored rules in an existing BUILD file, if any.
-            build_file_path = get_build_file_path(dirpath)
+            build_file_path = get_build_file_path(dirpath, build_file_name)
             ignored_rules = get_ignored_rules(build_file_path)
 
             for filename in sorted(filenames):
