@@ -62,13 +62,12 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
     # Base is package/module and the type of unknown is inferred below.
     for base, unknown in all_imports:
         # Early exit if base is in the installed modules of the current environment.
-        if is_installed(base, unknown, contains_pre_installed_packages):
+        if is_installed(base, unknown, contains_pre_installed_packages) and not base.startswith('benchsci'):
             continue
 
         # Prioritize custom inference rules used for parsing imports that pazel does not support.
         # These custom rules define how a Python import is mapped to Bazel dependencies.
         custom_rule_matches = False
-
         for inference_rule in custom_rules:
             new_packages, new_modules = inference_rule.holds(project_root, base, unknown)
 

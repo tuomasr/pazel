@@ -199,7 +199,8 @@ def infer_bazel_rule_type(script_path, script_source, custom_rules):
 
     if not bazel_rule_types:
         raise RuntimeError("No suitable Bazel rule type found for %s." % script_path)
-    elif len(bazel_rule_types) > 1:
+    return bazel_rule_types
+    if len(bazel_rule_types) > 1:
         # If the script is recognized by pazel native rule(s) and one exactly custom rule, then use
         # the custom rule. This is because the pazel native rules may generate false positives.
         is_custom = [rule not in native_rules for rule in bazel_rule_types]
