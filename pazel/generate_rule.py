@@ -75,7 +75,7 @@ def sort_module_names(module_names):
 
 
 def generate_rule(script_path, template, package_names, module_names, data_deps, test_size,
-                  import_name_to_pip_name, local_import_name_to_dep):
+                  import_name_to_pip_name, local_import_name_to_dep, pipenv_packages):
     """Generate a Bazel Python rule given the type of the Python file and imports in it.
 
     Args:
@@ -137,6 +137,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     local_packages = [p for p in package_names if p in local_import_name_to_dep]
     external_packages = [p for p in package_names if p not in local_import_name_to_dep]
 
+    package_name_deps = []
     for package_set in (local_packages, external_packages):     # List local packages first.
         for package_name in sorted(list(package_set)):
             if multiple_deps:
@@ -145,13 +146,18 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
             if package_name in local_import_name_to_dep:    # Local package.
                 package_name = local_import_name_to_dep[package_name]
                 deps += '\"' + package_name + '\"'
+                if multiple_deps:
+                    deps += ',\n'
             else:   # External/pip installable package.
                 package_name = import_name_to_pip_name.get(package_name, package_name)
-                package_name = 'requirement(\"%s\")' % package_name
-                deps += package_name
+                package_name_deps.extend(pipenv_packages[package_name])
 
-            if multiple_deps:
-                deps += ',\n'
+
+
+    if package_name_deps:
+        for package_name in sorted(set(package_name_deps)):
+            package_name = 2*tab+'requirement(\"%s\")' % package_name
+            deps += package_name + ',\n'
 
     if multiple_deps:
         deps += tab
@@ -171,7 +177,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
 
 def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages,
                                    custom_bazel_rules, custom_import_inference_rules,
-                                   import_name_to_pip_name, local_import_name_to_dep):
+                                   import_name_to_pip_name, local_import_name_to_dep, pipenv_packages):
     """Generate Bazel Python rule for a Python script.
 
     Args:
@@ -213,7 +219,7 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
 
         # Generate the Bazel Python rule based on the gathered information.
         rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
-                             data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
+                             data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep, pipenv_packages)
         rules.append(rule)
 
     return rules

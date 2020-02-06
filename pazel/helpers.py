@@ -124,6 +124,8 @@ def _is_in_stdlib(module, some_object):
             if 'site-packages' not in path:
                 sys.path.append(path)
 
+    if 'csv' in str(module):
+        return True
     in_stdlib = False
 
     try:
