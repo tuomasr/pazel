@@ -70,7 +70,6 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
         custom_rule_matches = False
         for inference_rule in custom_rules:
             new_packages, new_modules = inference_rule.holds(project_root, base, unknown)
-
             # If the rule holds, then add to the list of packages and/or modules.
             if new_packages is not None:
                 packages.extend(new_packages)

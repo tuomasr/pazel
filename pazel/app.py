@@ -22,6 +22,7 @@ def extract_transitive_dependencies(package_name, deps):
     else:
         for p in deps:
             package_name = p.get('package_name')
+            yield package_name
             deps = p.get('dependencies')
             for d in extract_transitive_dependencies(package_name, deps):
                 yield d
@@ -46,7 +47,7 @@ def flatten_dict(data):
             for d1 in flatten_dict(d['dependencies']):
                 yield d1
 
-def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path, pipfile, ignore_dir):
+def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path, pipfile):
     """Generate BUILD file(s) for a Python script or a directory of Python scripts.
 
     Args:
@@ -74,12 +75,12 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path,
 
             # Parse ignored rules in an existing BUILD file, if any.
             build_file_path = get_build_file_path(dirpath)
+            if os.path.exists(build_file_path):
+                continue
             ignored_rules = get_ignored_rules(build_file_path)
 
             for filename in sorted(filenames):
                 path = os.path.join(dirpath, filename)
-                if any(ignore_path in path for ignore_path in ignore_dir.split(',')):
-                    continue
 
                 # If a Python file is met and it is not in the list of ignored rules,
                 # generate a Bazel rule for it.
@@ -162,7 +163,7 @@ def main():
     if custom_pazelrc_path:
         assert os.path.isfile(args.pazelrc), ".pazelrc file %s not found." % args.pazelrc
 
-    app(args.input_path, args.project_root, args.pre_installed_packages, args.pazelrc, args.pipfile, args.ignore_dir)
+    app(args.input_path, args.project_root, args.pre_installed_packages, args.pazelrc, args.pipfile)
     print('Generated BUILD files for %s.' % args.input_path)
 
 

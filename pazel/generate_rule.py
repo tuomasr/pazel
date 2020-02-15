@@ -11,6 +11,7 @@ from pazel.parse_build import find_existing_data_deps
 from pazel.parse_build import find_existing_test_size
 from pazel.parse_imports import get_imports
 from pazel.parse_imports import infer_import_type
+from pazel.helpers import _is_in_stdlib
 
 
 def _walk_modules(current_dir, modules):
@@ -150,12 +151,22 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
                     deps += ',\n'
             else:   # External/pip installable package.
                 package_name = import_name_to_pip_name.get(package_name, package_name)
-                package_name_deps.extend(pipenv_packages[package_name])
+                if "pytype" in template:
+                    package_name_deps.append(package_name)
+                else:
+                    package_name_deps.extend(pipenv_packages[package_name])
 
 
 
+    package_name_deps = [import_name_to_pip_name.get(package_name, package_name) for package_name in package_name_deps]
     if package_name_deps:
         for package_name in sorted(set(package_name_deps)):
+            package_name = import_name_to_pip_name.get(package_name, package_name)
+            if _is_in_stdlib(package_name, some_object=None):
+                continue
+            if package_name == 'typing-extensions':
+                # Hack waiting for beam to depricate python 2
+                continue
             package_name = 2*tab+'requirement(\"%s\")' % package_name
             deps += package_name + ',\n'
 

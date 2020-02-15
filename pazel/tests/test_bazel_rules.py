@@ -221,13 +221,13 @@ class TestBazelRuleInference(unittest.TestCase):
         custom_rules = []
 
         self.assertEqual(infer_bazel_rule_type(script_name, binary_with_main_source, custom_rules),
-                         PyBinaryRule)
+                         [PyBinaryRule])
         self.assertEqual(infer_bazel_rule_type(script_name, binary_without_main_source,
-                                               custom_rules), PyBinaryRule)
+                                               custom_rules), [PyBinaryRule])
         self.assertEqual(infer_bazel_rule_type(script_name, module_source, custom_rules),
-                         PyLibraryRule)
+                         [PyLibraryRule])
         self.assertEqual(infer_bazel_rule_type(test_script_name, test_source, custom_rules),
-                         PyTestRule)
+                         [PyTestRule])
 
 
 if __name__ == '__main__':
