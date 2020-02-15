@@ -25,6 +25,7 @@ py_test(
     srcs = ["test_helpers.py"],
     size = "small",
     deps = ["//pazel:helpers"],
+    data = ["//pazel/tests:Pipfile.lock.json"]
 )
 
 py_test(

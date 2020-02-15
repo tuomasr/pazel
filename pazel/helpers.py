@@ -215,3 +215,14 @@ def parse_enclosed_expression(source, start, opening_token):
     expression = source[start:end]
 
     return expression
+
+
+def extract_dependencies(data):
+    packages = {}
+    for d in data:
+        package_name = d.get('package').get("package_name")
+        all_deps = [n.get("package_name") for n in d.get('dependencies')]
+        # add original package_name
+        all_deps.append(package_name)
+        packages[package_name] = all_deps
+    return packages

@@ -12,40 +12,11 @@ from pazel.generate_rule import parse_script_and_generate_rule
 from pazel.helpers import get_build_file_path
 from pazel.helpers import is_ignored
 from pazel.helpers import is_python_file
+from pazel.helpers import extract_dependencies
 from pazel.output_build import output_build_file
 from pazel.parse_build import get_ignored_rules
 from pazel.pazel_extensions import parse_pazel_extensions
 
-def extract_transitive_dependencies(package_name, deps):
-    if not deps:
-        yield package_name
-    else:
-        for p in deps:
-            package_name = p.get('package_name')
-            yield package_name
-            deps = p.get('dependencies')
-            for d in extract_transitive_dependencies(package_name, deps):
-                yield d
-
-def extract_dependencies(data):
-    packages = {}
-    for d in flatten_dict(data):
-        package_name = d.get('key')
-        deps = d.get('dependencies')
-        all_deps = list(extract_transitive_dependencies(package_name, deps))
-        # add original package_name
-        all_deps.append(package_name)
-        packages[package_name] = all_deps
-    return packages
-
-def flatten_dict(data):
-    for d in data:
-        yield d
-        if d['dependencies'] == []:
-            yield d
-        else:
-            for d1 in flatten_dict(d['dependencies']):
-                yield d1
 
 def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path, pipfile):
     """Generate BUILD file(s) for a Python script or a directory of Python scripts.
@@ -152,8 +123,6 @@ def main():
                         help='Path to .pazelrc file.')
     parser.add_argument('-f', '--pipfile', type=str, default=pipfile,
                         help='Path to Pipfile.lock.json file.')
-    parser.add_argument('-i', '--ignore_dir', type=str,
-                        help='comma seprated list of patterns to ignore')
 
     args = parser.parse_args()
 

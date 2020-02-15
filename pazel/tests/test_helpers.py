@@ -5,8 +5,10 @@ from __future__ import division
 from __future__ import print_function
 
 import unittest
+from pathlib import Path
+import json
 
-from pazel.helpers import parse_enclosed_expression
+from pazel.helpers import parse_enclosed_expression, extract_dependencies
 
 
 class TestHelpers(unittest.TestCase):
@@ -37,6 +39,10 @@ class TestHelpers(unittest.TestCase):
         expression = parse_enclosed_expression(source, start, '(')
 
         self.assertEqual(expression, expected_expression)
+    def test_extranct_dependencies(self):
+        data = json.load(open(Path(Path(__file__).parent, "Pipfile.lock.json")))
+        data = extract_dependencies(data)
+        assert "packaging" in data["pytest"]
 
 
 if __name__ == '__main__':
