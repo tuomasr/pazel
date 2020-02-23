@@ -40,7 +40,7 @@ def get_build_file_path(path):
     if os.path.isdir(path):
         directory = path
     else:
-        directory = os.path.dirpath(path)
+        directory = os.path.dirname(path)
 
     build_file_path = os.path.join(directory, 'BUILD')
 
