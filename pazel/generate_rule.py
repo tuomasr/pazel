@@ -131,7 +131,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
             deps += ',\n'
 
     # Even if a submodule of a local or external package is required, install the whole package.
-    package_names = set([p.split('.')[0] for p in package_names])
+    package_names = set([import_name_to_pip_name.get(p.split('.')[0], p.split('.')[0]) for p in package_names])
 
     # Split packages to local and external.
     local_packages = [p for p in package_names if p in local_import_name_to_dep]
