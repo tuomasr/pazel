@@ -1,1 +1,6 @@
 *.pyc
+/build
+/dist
+/pazel.egg-info
+/uc-pazel.iml
+/.idea/
