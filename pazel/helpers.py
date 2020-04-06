@@ -76,7 +76,10 @@ def is_ignored(script_path, ignored_rules):
 
         for keyword in func_call.keywords:
             if keyword.arg == 'srcs':
-                elements = keyword.value.elts
+                try:
+                    elements = keyword.value.elts
+                except AttributeError:
+                    break
 
                 assert len(elements) == 1, \
                     "Multiple source files not supported in %s." % ignored_rule
