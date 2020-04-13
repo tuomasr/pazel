@@ -42,13 +42,14 @@ def get_imports(script_source):
     return packages, from_imports
 
 
-def infer_import_type(all_imports, project_root, contains_pre_installed_packages, custom_rules):
+def infer_import_type(script_path, all_imports, project_root, contains_pre_installed_packages, custom_rules):
     """Infer what is being imported.
 
     Given a list of tuples (package/module, some object) infer whether the first element is a
     package or a module and whether it is installed. Also, infer the type of the second element.
 
     Args:
+        script_path (str): The filepath of the Python script being processed.
         all_imports (list of tuple): All imports in a Python script.
         project_root (str): Local imports are assumed to be relative to this path.
         contains_pre_installed_packages (bool): Whether the environment contains external packages.
@@ -93,6 +94,11 @@ def infer_import_type(all_imports, project_root, contains_pre_installed_packages
         module_path = os.path.join(project_root, base.replace('.', '/') + '.py')
         if os.path.exists(module_path):
             modules.append(base)
+            continue
+
+        module_path = os.path.join(project_root, os.path.dirname(script_path), base.replace('.', '/') + '.py')
+        if os.path.exists(module_path):
+            modules.append(os.path.dirname(script_path).replace('/', '.') + '.%s' % base)
             continue
 
         # Check if 'unknown' is actually a package or a module.

@@ -197,7 +197,7 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
     all_imports = package_names + from_imports
 
     # Infer the import type: Is a package, module, or an object being imported.
-    package_names, module_names = infer_import_type(all_imports, project_root,
+    package_names, module_names = infer_import_type(script_path, all_imports, project_root,
                                                     contains_pre_installed_packages,
                                                     custom_import_inference_rules)
 
