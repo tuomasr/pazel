@@ -201,16 +201,21 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
                                                     contains_pre_installed_packages,
                                                     custom_import_inference_rules)
 
+    rules = []
     # Infer the Bazel rule type for the script.
-    bazel_rule_type = infer_bazel_rule_type(script_path, script_source, custom_bazel_rules)
+    bazel_rule_types = infer_bazel_rule_type(script_path, script_source, custom_bazel_rules)
 
-    # Data dependencies or test size cannot be inferred from the script source code currently.
-    # Use information in any existing BUILD files.
-    data_deps = find_existing_data_deps(script_path, bazel_rule_type)
-    test_size = find_existing_test_size(script_path, bazel_rule_type)
+    for bazel_rule_type in bazel_rule_types:
 
-    # Generate the Bazel Python rule based on the gathered information.
-    rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
-                         data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
+        # Data dependencies or test size cannot be inferred from the script source code currently.
+        # Use information in any existing BUILD files.
+        data_deps = find_existing_data_deps(script_path, bazel_rule_type)
+        test_size = find_existing_test_size(script_path, bazel_rule_type)
 
-    return rule
+        # Generate the Bazel Python rule based on the gathered information.
+        rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
+                             data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
+
+        rules.append(rule)
+
+    return rules

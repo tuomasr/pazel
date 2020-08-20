@@ -62,7 +62,8 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
                         if build_source:
                             build_source += 2*'\n'
 
-                        build_source += new_rule
+                        for rule in new_rule:
+                            build_source += rule + 2*'\n'
 
             # If Python files were found, output the BUILD file.
             if build_source != '' or ignored_rules:
