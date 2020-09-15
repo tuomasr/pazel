@@ -120,7 +120,13 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
 
             # Replace the last slash with :.
             last_slash_idx = module_name.rfind('/')
-            module_name = module_name[:last_slash_idx] + ':' + module_name[last_slash_idx + 1:]
+            path = module_name[:last_slash_idx]
+            path_parts = path.split('/')
+            target = module_name[last_slash_idx + 1:]
+            if path_parts[-1] != target:
+                module_name = path + ':' + target
+            else:
+                module_name = path
 
         if multiple_deps:
             deps += 2*tab

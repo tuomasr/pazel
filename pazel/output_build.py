@@ -5,6 +5,7 @@ from __future__ import division
 from __future__ import print_function
 
 import re
+from difflib import unified_diff
 
 
 def _append_newline(source):
@@ -13,7 +14,7 @@ def _append_newline(source):
 
 
 def output_build_file(build_source, ignored_rules, output_extension, custom_bazel_rules,
-                      build_file_path, requirement_load):
+                      build_file_path, requirement_load, checks, update=True):
     """Output a BUILD file.
 
     Args:
@@ -23,6 +24,8 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
         custom_bazel_rules (list of BazelRule classes): User-defined BazelRule classes.
         build_file_path (str): Path to the BUILD file in which build_source is written.
         requirement_load (str): Statement for loading the 'requirement' rule.
+        checks (dict): Map of BUILD files to diff output.
+        update (bool): Whether to modify the BUILD files or not.
     """
     header = ''
 
@@ -80,10 +83,23 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
     if output_extension.footer:
         output += 2*'\n' + _append_newline(output_extension.footer)
 
-    with open(build_file_path, 'w') as build_file:
-        output = _append_newline(output)
+    output = _append_newline(output)
 
-        # Remove possible duplicate newlines (the user may have added such accidentally).
-        output = re.sub('\n\n\n*', '\n\n', output)
+    # Remove possible duplicate newlines (the user may have added such accidentally).
+    output = re.sub('\n\n\n*', '\n\n', output)
 
-        build_file.write(output)
+    # Remove extra newline at end of file.
+    output = re.sub('\n\n$', '\n', output)
+
+    with open(build_file_path, 'r') as build_file:
+        original_build_source = build_file.read()
+        diff = unified_diff(original_build_source.splitlines(), output.splitlines())
+        diff_lines = []
+        for line in diff:
+            diff_lines.append(line)
+        if len(diff_lines) > 0:
+            checks[build_file_path] = diff_lines
+
+    if update:
+        with open(build_file_path, 'w') as build_file:
+            build_file.write(output)

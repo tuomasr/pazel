@@ -16,7 +16,7 @@ from pazel.parse_build import get_ignored_rules
 from pazel.pazel_extensions import parse_pazel_extensions
 
 
-def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path):
+def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path, update):
     """Generate BUILD file(s) for a Python script or a directory of Python scripts.
 
     Args:
@@ -26,10 +26,16 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
         contains_pre_installed_packages (bool): Whether the environment is allowed to contain
             pre-installed packages or whether only the Python standard library is available.
         pazelrc_path (str): Path to .pazelrc config file for customizing pazel.
+        update (bool): Whether to modify the BUILD files or not.
+
+    Returns:
+        checks (dict): Map of BUILD files to diff output.
 
     Raises:
         RuntimeError: input_path does is not a directory or a Python file.
     """
+    checks = {}
+
     # Parse user-defined extensions to pazel.
     output_extension, custom_bazel_rules, custom_import_inference_rules, import_name_to_pip_name, \
         local_import_name_to_dep, requirement_load = parse_pazel_extensions(pazelrc_path)
@@ -68,7 +74,7 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
             # If Python files were found, output the BUILD file.
             if build_source != '' or ignored_rules:
                 output_build_file(build_source, ignored_rules, output_extension, custom_bazel_rules,
-                                  build_file_path, requirement_load)
+                                  build_file_path, requirement_load, checks, update)
     # Handle single Python file.
     elif is_python_file(input_path):
         build_source = ''
@@ -89,9 +95,11 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
         # If Python files were found, output the BUILD file.
         if build_source != '' or ignored_rules:
             output_build_file(build_source, ignored_rules, output_extension, custom_bazel_rules,
-                              build_file_path, requirement_load)
+                              build_file_path, requirement_load, checks, update)
     else:
         raise RuntimeError("Invalid input path %s." % input_path)
+
+    return checks
 
 
 def main():
@@ -112,6 +120,8 @@ def main():
                         ' Affects which packages are listed as pip-installable.')
     parser.add_argument('-c', '--pazelrc', type=str, default=default_pazelrc_path,
                         help='Path to .pazelrc file.')
+    parser.add_argument('-d', '--check', action='store_true',
+                        help='Check for changes only.')
 
     args = parser.parse_args()
 
@@ -121,8 +131,20 @@ def main():
     if custom_pazelrc_path:
         assert os.path.isfile(args.pazelrc), ".pazelrc file %s not found." % args.pazelrc
 
-    app(args.input_path, args.project_root, args.pre_installed_packages, args.pazelrc)
-    print('Generated BUILD files for %s.' % args.input_path)
+    checks = app(args.input_path, args.project_root, args.pre_installed_packages, args.pazelrc, not args.check)
+
+    if not args.check:
+        print('Generated BUILD files for %s:' % args.input_path)
+        for key, val in checks.items():
+            print(key)
+    else:
+        if len(checks) > 0:
+            print('Would modify the following BUILD files for %s:' % args.input_path)
+            for key, val in checks.items():
+                print(key)
+                for line in val:
+                    print(line)
+            exit(1)
 
 
 if __name__ == "__main__":

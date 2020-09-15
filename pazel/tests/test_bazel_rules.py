@@ -70,8 +70,8 @@ class TestTemplates(unittest.TestCase):
 
         expected = """py_test(
     name = "my_test",
-    srcs = ["my_test.py"],
     size = "medium",
+    srcs = ["my_test.py"],
     data = ["something"],
     deps = ['//foo:bar']
 )"""
@@ -221,13 +221,13 @@ class TestBazelRuleInference(unittest.TestCase):
         custom_rules = []
 
         self.assertEqual(infer_bazel_rule_type(script_name, binary_with_main_source, custom_rules),
-                         PyBinaryRule)
+                         [PyBinaryRule])
         self.assertEqual(infer_bazel_rule_type(script_name, binary_without_main_source,
-                                               custom_rules), PyBinaryRule)
+                                               custom_rules), [PyBinaryRule])
         self.assertEqual(infer_bazel_rule_type(script_name, module_source, custom_rules),
-                         PyLibraryRule)
+                         [PyLibraryRule])
         self.assertEqual(infer_bazel_rule_type(test_script_name, test_source, custom_rules),
-                         PyTestRule)
+                         [PyTestRule])
 
 
 if __name__ == '__main__':

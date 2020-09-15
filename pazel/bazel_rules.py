@@ -25,8 +25,8 @@ PY_LIBRARY_TEMPLATE = """py_library(
 
 PY_TEST_TEMPLATE = """py_test(
     name = "{name}",
-    srcs = ["{name}.py"],
     size = "{size}",
+    srcs = ["{name}.py"],
     {data}
     {deps}
 )"""
