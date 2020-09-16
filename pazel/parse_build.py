@@ -145,7 +145,7 @@ def get_ignored_rules(build_file_path):
 
     # pazel ignores rules following the tag "# pazel-ignore". Spaces are ignored within the tag but
     # the line must start with #.
-    for match in re.finditer('\n#\s+pazel-ignore\s+', build_source):
+    for match in re.finditer('(?:^|\n)#\s+pazel-ignore\s+', build_source):
         start = match.start()
 
         rule = parse_enclosed_expression(build_source, start, '(')

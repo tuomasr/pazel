@@ -77,7 +77,9 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
     # Add other ignored rules than load statements to the bottom, separated by newlines.
     if remaining_ignored_rules:
         output = output.rstrip()
-        output += '\n' + '\n'.join(remaining_ignored_rules)
+        if output:
+            output += '\n'
+        output += '\n'.join(remaining_ignored_rules)
 
     # Add the footer, separated by a newline.
     if output_extension.footer:
