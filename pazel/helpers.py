@@ -114,7 +114,7 @@ def is_python_file(path):
     return valid
 
 
-def _is_in_stdlib(module, some_object):
+def _is_in_stdlib(mod, some_object):
     """Check if a given module is part of the Python standard library."""
     # Clear PYTHONPATH temporarily and try importing the given module.
     original_sys_path = sys.path
@@ -130,13 +130,17 @@ def _is_in_stdlib(module, some_object):
     in_stdlib = False
 
     try:
-        module = importlib.import_module(module)
+        module = importlib.import_module(mod)
 
         if some_object:
-            getattr(module, some_object)
+            try:
+                getattr(module, some_object)
+            except AttributeError:
+                # Try importing absolute path since some_object may be a sub-module
+                importlib.import_module('.'.join([mod, some_object]))
 
         in_stdlib = True
-    except (ImportError, AttributeError):
+    except ImportError:
         pass
 
     sys.path = original_sys_path
