@@ -11,7 +11,7 @@ from pazel.helpers import contains_python_file
 from pazel.helpers import is_installed
 
 
-def get_imports(script_source):
+def get_imports(script_source, script_package):
     """Parse imported packages and objects imported from packages.
 
     Args:
@@ -29,7 +29,12 @@ def get_imports(script_source):
     for node in ast_of_source.body:
         # Parse expressions of the form "from X import Y".
         if isinstance(node, ast.ImportFrom):
-            module = node.module
+            if node.level > 0:
+                # Normalize relative imports into absolute imports.
+                base_module_path = script_package.split(".")
+                module = ".".join(base_module_path[:len(base_module_path) - node.level]) + "." + node.module
+            else:
+                module = node.module
 
             for name in node.names:
                 from_imports.append((module, name.name))

@@ -193,7 +193,8 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
         script_source = script_file.read()
 
     # Get all imports in the script.
-    package_names, from_imports = get_imports(script_source)
+    script_package = script_path.lstrip(project_root).rstrip(".py").replace('/', '.')
+    package_names, from_imports = get_imports(script_source, script_package)
     all_imports = package_names + from_imports
 
     # Infer the import type: Is a package, module, or an object being imported.
