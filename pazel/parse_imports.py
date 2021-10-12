@@ -32,7 +32,14 @@ def get_imports(script_source, script_package):
             if node.level > 0:
                 # Normalize relative imports into absolute imports.
                 base_module_path = script_package.split(".")
-                module = ".".join(base_module_path[:len(base_module_path) - node.level]) + "." + node.module
+                relative_module_path = (
+                    node.module.split(".") if node.module else []
+                )
+                full_module_path = (
+                    base_module_path[:len(base_module_path) - node.level] +
+                    relative_module_path
+                )
+                module = ".".join(full_module_path)
             else:
                 module = node.module
 

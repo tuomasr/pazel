@@ -29,7 +29,10 @@ py_library(
 py_binary(
     name = "bar3",
     srcs = ["bar3.py"],
-    deps = ["//foo:bar2"],
+    deps = [
+        "//foo:__init__",
+        "//foo:bar2",
+    ],
 )
 
 py_library(
