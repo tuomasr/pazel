@@ -18,12 +18,18 @@ class ImportInferenceRule(object):
         Args:
             project_root (str): Local imports are assumed to be relative to this path.
             base (str): Name of a package or a module.
-            unknown (str): Can package, module, function or any other object.
+            unknown (str): Can be a package, module, function or any other object.
 
         Returns:
             packages (list of str or None): Imported package names. None if no packages are imported
                 or if the rule does not match the import.
             modules (list of str or None): Imported module names. None if no modules are imported or
                 if the rule does not match the import.
+                - Simple strings will become a local bazel rule reference, prepended with ':',
+                  e.g. "foo" becomes ":foo".
+                - Dot separated strings will become absolute bazel paths, e.g. "foo.bar.baz" becomes
+                  "//foo/bar:baz".
+                - Dot separated strings where the first element starts with the @ symbol, will become
+                  external repository references.  e.g. "@foo.bar.baz" becomes "@foo//bar:baz"
         """
         raise NotImplementedError()

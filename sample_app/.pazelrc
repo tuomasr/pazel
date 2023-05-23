@@ -69,7 +69,7 @@ class LocalImportAllInferenceRule(object):
         Args:
             project_root (str): Local imports are assumed to be relative to this path.
             base (str): Name of a package or a module.
-            unknown (str): Can package, module, function or any other object.
+            unknown (str): Can be a package, module, function or any other object.
 
         Returns:
             packages (None): The rule applies only to modules.

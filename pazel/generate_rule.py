@@ -111,16 +111,21 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
         deps += '\n'
 
     for module_name in sort_module_names(list(module_names)):
-        # Import from the same directory as the script resides.
         if '.' not in module_name:
+            # Import from the same directory as the script resides.
             module_name = ':' + module_name
         else:
-            # Format the dotted module name to the Bazel format with slashes.
-            module_name = '//' + module_name.replace('.', '/')
+            # Interpret dot separated path as a bazel rule path.
+            module_components = module_name.split('.')
 
-            # Replace the last slash with :.
-            last_slash_idx = module_name.rfind('/')
-            module_name = module_name[:last_slash_idx] + ':' + module_name[last_slash_idx + 1:]
+            # Pull out external repository name before creating root path.
+            # See: https://bazel.build/extending/repo
+            external_repository = ''
+            if module_components[0].startswith('@'):
+                external_repository = module_components.pop(0)
+
+            # Format the dotted module name to the Bazel format with slashes.
+            module_name = external_repository + '//' + '/'.join(module_components[:-1]) + ':' + module_components[-1]
 
         if multiple_deps:
             deps += 2*tab
