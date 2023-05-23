@@ -44,7 +44,7 @@ class BazelRule(object):
     rule_identifier = None
 
     @staticmethod
-    def applies_to(script_name, script_source):
+    def applies_to(script_name, script_source, script_extension):
         """Check whether this rule applies to a given script.
 
         Args:
@@ -88,7 +88,7 @@ class PyBinaryRule(BazelRule):
     rule_identifier = 'py_binary'   # The name of the rule.
 
     @staticmethod
-    def applies_to(script_name, script_source):
+    def applies_to(script_name, script_source, script_extension):
         """Check whether this rule applies to a given script.
 
         Args:
@@ -103,7 +103,7 @@ class PyBinaryRule(BazelRule):
         entrypoints += re.findall('\n\S+\([\S+]?\)', script_source)
 
         # Rule out tests using unittest.
-        is_test = PyTestRule.applies_to(script_name, script_source)
+        is_test = PyTestRule.applies_to(script_name, script_source, script_extension)
 
         applies = len(entrypoints) > 0 and not is_test
 
@@ -119,7 +119,7 @@ class PyLibraryRule(BazelRule):
     rule_identifier = 'py_library'  # The name of the rule.
 
     @staticmethod
-    def applies_to(script_name, script_source):
+    def applies_to(script_name, script_source, script_extension):
         """Check whether this rule applies to a given script.
 
         Args:
@@ -129,8 +129,8 @@ class PyLibraryRule(BazelRule):
         Returns:
             applies (bool): Whether this Bazel rule can be used to represent the script.
         """
-        is_test = PyTestRule.applies_to(script_name, script_source)
-        is_binary = PyBinaryRule.applies_to(script_name, script_source)
+        is_test = PyTestRule.applies_to(script_name, script_source, script_extension)
+        is_binary = PyBinaryRule.applies_to(script_name, script_source, script_extension)
 
         applies = not (is_test or is_binary)
 
@@ -146,7 +146,7 @@ class PyTestRule(BazelRule):
     rule_identifier = 'py_test'     # The name of the rule.
 
     @staticmethod
-    def applies_to(script_name, script_source):
+    def applies_to(script_name, script_source, script_extension):
         """Check whether this rule applies to a given script.
 
         Args:
@@ -186,7 +186,10 @@ def infer_bazel_rule_type(script_path, script_source, custom_rules):
     Raises:
         RuntimeError: If zero or more than one Bazel rule is found for the current script.
     """
-    script_name = os.path.basename(script_path).replace('.py', '')
+    script_basename = os.path.basename(script_path)
+    script_extension_index = script_basename.rfind('.')
+    script_name = script_basename[:script_extension_index]
+    script_extension = script_basename[script_extension_index:]
 
     bazel_rule_types = []
 
@@ -194,7 +197,7 @@ def infer_bazel_rule_type(script_path, script_source, custom_rules):
     registered_rules = native_rules + custom_rules
 
     for bazel_rule in registered_rules:
-        if bazel_rule.applies_to(script_name, script_source):
+        if bazel_rule.applies_to(script_name, script_source, script_extension):
             bazel_rule_types.append(bazel_rule)
 
     if not bazel_rule_types:

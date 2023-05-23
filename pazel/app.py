@@ -11,6 +11,7 @@ from pazel.generate_rule import parse_script_and_generate_rule
 from pazel.helpers import get_build_file_path
 from pazel.helpers import is_ignored
 from pazel.helpers import is_python_file
+from pazel.helpers import has_extension
 from pazel.output_build import output_build_file
 from pazel.parse_build import get_ignored_rules
 from pazel.pazel_extensions import parse_pazel_extensions
@@ -31,7 +32,8 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
         RuntimeError: input_path does is not a directory or a Python file.
     """
     # Parse user-defined extensions to pazel.
-    output_extension, custom_bazel_rules, custom_import_inference_rules, import_name_to_pip_name, \
+    output_extension, custom_bazel_rules, custom_bazel_rules_extra_extensions, \
+        custom_import_inference_rules, import_name_to_pip_name, \
         local_import_name_to_dep, requirement_load = parse_pazel_extensions(pazelrc_path)
 
     # Handle directories.
@@ -49,7 +51,7 @@ def app(input_path, project_root, contains_pre_installed_packages, pazelrc_path)
 
                 # If a Python file is met and it is not in the list of ignored rules,
                 # generate a Bazel rule for it.
-                if is_python_file(path) and not is_ignored(path, ignored_rules):
+                if (is_python_file(path) or has_extension(path, custom_bazel_rules_extra_extensions)) and not is_ignored(path, ignored_rules):
                     new_rule = parse_script_and_generate_rule(path, project_root,
                                                               contains_pre_installed_packages,
                                                               custom_bazel_rules,

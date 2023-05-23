@@ -35,6 +35,8 @@ def parse_pazel_extensions(pazelrc_path):
     Returns:
         output_extension (OutputExtension): Object containing user-defined header and footer.
         custom_bazel_rules (list of BazelRule classes): Custom BazelRule classes.
+        custom_bazel_rules_extra_extensions: Extra filename extensions to allow custom_bazel_rules
+            implementations to visit (e.g. .proto) as rules based on them may generate python code.
         custom_import_inference_rules (list of ImportInferenceRule classes): Custom classes
             for inferring import types.
         import_name_to_pip_name (dict): Mapping from Python package import name to its pip name.
@@ -72,6 +74,9 @@ def parse_pazel_extensions(pazelrc_path):
     custom_bazel_rules = getattr(pazelrc, 'EXTRA_BAZEL_RULES', [])
     assert isinstance(custom_bazel_rules, list), "EXTRA_BAZEL_RULES must be a list."
 
+    custom_bazel_rules_extra_extensions = getattr(pazelrc, 'EXTRA_BAZEL_RULES_FILE_EXTENSIONS', [])
+    assert isinstance(custom_bazel_rules_extra_extensions, list), "EXTRA_BAZEL_RULES_FILE_EXTENSIONS must be a list."
+
     # Read user-defined ImportInferenceRule classes.
     custom_import_inference_rules = getattr(pazelrc, 'EXTRA_IMPORT_INFERENCE_RULES', [])
     assert isinstance(custom_import_inference_rules, list), \
@@ -92,5 +97,6 @@ def parse_pazel_extensions(pazelrc_path):
 
     assert isinstance(requirement_load, str), "REQUIREMENT must be a string."
 
-    return output_extension, custom_bazel_rules, custom_import_inference_rules, \
-        import_name_to_pip_name, local_import_name_to_dep, requirement_load
+    return output_extension, custom_bazel_rules, custom_bazel_rules_extra_extensions, \
+        custom_import_inference_rules, import_name_to_pip_name, local_import_name_to_dep, \
+        requirement_load

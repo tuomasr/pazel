@@ -180,7 +180,8 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
     """Generate Bazel Python rule for a Python script.
 
     Args:
-        script_path (str): Path to a Python file for which the Bazel rule is generated.
+        script_path (str): Path to a file for which the Bazel rule is generated.  Usually Python,
+            but could be an extra extension type requested by for custom rules.
         project_root (str): Imports in the Python script are assumed to be relative to this path.
         contains_pre_installed_packages (bool): Environment contains pre-installed packages (true)
             or only the standard library (false).
@@ -198,7 +199,10 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
         script_source = script_file.read()
 
     # Get all imports in the script.
-    package_names, from_imports = get_imports(script_source)
+    package_names = []
+    from_imports = []
+    if script_path.endswith('.py'):
+        package_names, from_imports = get_imports(script_source)
     all_imports = package_names + from_imports
 
     # Infer the import type: Is a package, module, or an object being imported.

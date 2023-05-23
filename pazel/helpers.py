@@ -110,6 +110,24 @@ def is_python_file(path):
 
     return valid
 
+def has_extension(path, extensions):
+    """Check whether the file is a file of the given types.
+
+    Args:
+        path (str): Path to a file.
+        extensions (list[str]): File extensions to return true for. 
+
+    Returns:
+        valid (bool): The file in path is a Python file.
+    """
+    valid = False
+
+    for extension in extensions:
+        if os.path.isfile(path) and path.endswith(extension):
+            valid = True
+
+    return valid
+
 
 def _is_in_stdlib(module, some_object):
     """Check if a given module is part of the Python standard library."""
