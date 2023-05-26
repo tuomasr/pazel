@@ -125,7 +125,9 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
                 external_repository = module_components.pop(0)
 
             # Format the dotted module name to the Bazel format with slashes.
-            module_name = external_repository + '//' + '/'.join(module_components[:-1]) + ':' + module_components[-1]
+            module_name = external_repository + '//' + '/'.join(module_components[:-1])
+            if len(module_components) > 1 and (module_components[-2] != module_components[-1]):
+                module_name = module_name + ':' + module_components[-1]
 
         if multiple_deps:
             deps += 2*tab
