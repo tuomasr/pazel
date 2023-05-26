@@ -92,7 +92,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     Returns:
         rule (str): Bazel rule generated for the current Python script.
     """
-    script_name = os.path.basename(script_path).replace('.py', '')
+    script_name = os.path.basename(os.path.splitext(script_path)[0])
     deps = ''
     tab = '    '
 
