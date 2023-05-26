@@ -130,7 +130,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
                 module_name = module_name + ':' + module_components[0]
             else:
                 module_name = module_name + '/'.join(module_components[:-1])
-                if len(module_components) > 2 and (module_components[-2] != module_components[-1]):
+                if len(module_components) > 1 and (module_components[-2] != module_components[-1]):
                     module_name = module_name + ':' + module_components[-1]
 
         if multiple_deps:
