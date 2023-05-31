@@ -7,6 +7,7 @@ from __future__ import print_function
 import unittest
 
 from pazel.generate_rule import sort_module_names
+from pazel.generate_rule import translate_dot_module_name_to_bazel
 
 
 class TestGenerateRule(unittest.TestCase):
@@ -22,6 +23,20 @@ class TestGenerateRule(unittest.TestCase):
 
         self.assertEqual(sorted_modules, expected_sorted_modules)
 
+    def test_translate_dot_module_name_to_bazel(self):
+        # Simple paths
+        self.assertEqual(translate_dot_module_name_to_bazel("abc"), ":abc")
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.xyz"), "//abc:xyz")
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.def.xyz"), "//abc/def:xyz")
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.def.ghi.xyz"), "//abc/def/ghi:xyz")
+        # Rule matches package shorthand
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.abc"), "//abc")
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.def.def"), "//abc/def")
+        self.assertEqual(translate_dot_module_name_to_bazel("abc.def.ghi.ghi"), "//abc/def/ghi")
+        # External repos
+        self.assertEqual(translate_dot_module_name_to_bazel("@ext.abc"), "@ext//:abc")
+        self.assertEqual(translate_dot_module_name_to_bazel("@ext.abc.def"), "@ext//abc:def")
+        self.assertEqual(translate_dot_module_name_to_bazel("@ext.abc.def.xyz"), "@ext//abc/def:xyz")
 
 if __name__ == '__main__':
     unittest.main()

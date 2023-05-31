@@ -111,27 +111,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
         deps += '\n'
 
     for module_name in sort_module_names(list(module_names)):
-        if '.' not in module_name:
-            # Import from the same directory as the script resides.
-            module_name = ':' + module_name
-        else:
-            # Interpret dot separated path as a bazel rule path.
-            module_components = module_name.split('.')
-
-            # Pull out external repository name before creating root path.
-            # See: https://bazel.build/extending/repo
-            external_repository = ''
-            if module_components[0].startswith('@'):
-                external_repository = module_components.pop(0)
-
-            # Format the dotted module name to the Bazel format with slashes.
-            module_name = external_repository + '//'
-            if len(module_components) == 1:
-                module_name = module_name + ':' + module_components[0]
-            else:
-                module_name = module_name + '/'.join(module_components[:-1])
-                if len(module_components) > 1 and (module_components[-2] != module_components[-1]):
-                    module_name = module_name + ':' + module_components[-1]
+        module_name = translate_dot_module_name_to_bazel(module_name)
 
         if multiple_deps:
             deps += 2*tab
@@ -179,6 +159,29 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
 
     return rule
 
+def translate_dot_module_name_to_bazel(module_name):
+    if '.' not in module_name:
+            # Import from the same directory as the script resides.
+            module_name = ':' + module_name
+    else:
+        # Interpret dot separated path as a bazel rule path.
+        module_components = module_name.split('.')
+
+        # Pull out external repository name before creating root path.
+        # See: https://bazel.build/extending/repo
+        external_repository = ''
+        if module_components[0].startswith('@'):
+            external_repository = module_components.pop(0)
+
+        # Format the dotted module name to the Bazel format with slashes.
+        module_name = external_repository + '//'
+        if len(module_components) == 1:
+            module_name = module_name + ':' + module_components[0]
+        else:
+            module_name = module_name + '/'.join(module_components[:-1])
+            if len(module_components) > 1 and (module_components[-2] != module_components[-1]):
+                module_name = module_name + ':' + module_components[-1]
+    return module_name
 
 def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages,
                                    custom_bazel_rules, custom_import_inference_rules,
