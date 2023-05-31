@@ -127,7 +127,7 @@ class TestBazelRule(unittest.TestCase):
     def test_applies_to(self):
         """Test BazelRule.applies_to."""
         with self.assertRaises(NotImplementedError):
-            BazelRule.applies_to('script_name', 'script_source')
+            BazelRule.applies_to('script_name', 'script_source', '.py')
 
     def test_find_existing(self):
         """Test finding an existing Bazel rule in a BUILD source."""
@@ -158,16 +158,16 @@ class TestPyBinaryRule(unittest.TestCase):
     def test_applies_to(self):
         """Test PyBinaryRule.applies_to for different script sources."""
         # A script containing __main__ should generate a py_binary rule.
-        self.assertEqual(PyBinaryRule.applies_to(script_name, binary_with_main_source), True)
+        self.assertEqual(PyBinaryRule.applies_to(script_name, binary_with_main_source, '.py'), True)
 
         # Ditto for a level 0 function call.
-        self.assertEqual(PyBinaryRule.applies_to(script_name, binary_without_main_source), True)
+        self.assertEqual(PyBinaryRule.applies_to(script_name, binary_without_main_source, '.py'), True)
 
         # Modules should not generate a py_binary rule.
-        self.assertEqual(PyBinaryRule.applies_to(script_name, module_source), False)
+        self.assertEqual(PyBinaryRule.applies_to(script_name, module_source, '.py'), False)
 
         # Tests should not generate a py_binary rule even though they contain __main__.
-        self.assertEqual(PyBinaryRule.applies_to(test_script_name, test_source), False)
+        self.assertEqual(PyBinaryRule.applies_to(test_script_name, test_source, '.py'), False)
 
 
 class TestPyLibraryRule(unittest.TestCase):
@@ -181,10 +181,10 @@ class TestPyLibraryRule(unittest.TestCase):
 
     def test_applies_to(self):
         """Test PyLibraryRule.applies_to for different script sources."""
-        self.assertEqual(PyLibraryRule.applies_to(script_name, binary_with_main_source), False)
-        self.assertEqual(PyLibraryRule.applies_to(script_name, binary_without_main_source), False)
-        self.assertEqual(PyLibraryRule.applies_to(script_name, module_source), True)
-        self.assertEqual(PyLibraryRule.applies_to(test_script_name, test_source), False)
+        self.assertEqual(PyLibraryRule.applies_to(script_name, binary_with_main_source, '.py'), False)
+        self.assertEqual(PyLibraryRule.applies_to(script_name, binary_without_main_source, '.py'), False)
+        self.assertEqual(PyLibraryRule.applies_to(script_name, module_source, '.py'), True)
+        self.assertEqual(PyLibraryRule.applies_to(test_script_name, test_source, '.py'), False)
 
 
 class TestPyTestRule(unittest.TestCase):
@@ -198,10 +198,10 @@ class TestPyTestRule(unittest.TestCase):
 
     def test_applies_to(self):
         """Test PyTestRule.applies_to for different script sources."""
-        self.assertEqual(PyTestRule.applies_to(script_name, binary_with_main_source), False)
-        self.assertEqual(PyTestRule.applies_to(script_name, binary_without_main_source), False)
-        self.assertEqual(PyTestRule.applies_to(script_name, module_source), False)
-        self.assertEqual(PyTestRule.applies_to(test_script_name, test_source), True)
+        self.assertEqual(PyTestRule.applies_to(script_name, binary_with_main_source, '.py'), False)
+        self.assertEqual(PyTestRule.applies_to(script_name, binary_without_main_source, '.py'), False)
+        self.assertEqual(PyTestRule.applies_to(script_name, module_source, '.py'), False)
+        self.assertEqual(PyTestRule.applies_to(test_script_name, test_source, '.py'), True)
 
 
 class TestNativeBazelRules(unittest.TestCase):
