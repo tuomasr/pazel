@@ -12,7 +12,7 @@ def _append_newline(source):
     return source if source.endswith('\n') else source + '\n'
 
 
-def output_build_file(build_source, ignored_rules, output_extension, custom_bazel_rules,
+def output_build_file(build_source, ignored_rules, output_extension, bazel_rule_types,
                       build_file_path, requirement_load):
     """Output a BUILD file.
 
@@ -20,7 +20,7 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
         build_source (str): The contents of the BUILD file to output.
         ignored_rules (list of str): Rules the user wants to keep as is.
         output_extension (OutputExtension): User-defined header and footer.
-        custom_bazel_rules (list of BazelRule classes): User-defined BazelRule classes.
+        bazel_rule_types (list of BazelRule classes): BazelRule classes that were used to render the build_source.
         build_file_path (str): Path to the BUILD file in which build_source is written.
         requirement_load (str): Statement for loading the 'requirement' rule.
     """
@@ -53,13 +53,19 @@ def output_build_file(build_source, ignored_rules, output_extension, custom_baze
 
     # If the BUILD source contains custom Bazel rules, then add the load statements for them unless
     # the load statements are already in the ignored load statements.
-    for custom_rule in custom_bazel_rules:
-        rule_identifier = custom_rule.rule_identifier
+    load_statements = []
+    for bazel_rule_type in bazel_rule_types:
+        rule_identifier = bazel_rule_type.rule_identifier
         in_ignored_load_statements = any([rule_identifier in statement for statement in
                                           ignored_load_statements])
 
-        if rule_identifier in build_source and not in_ignored_load_statements:
-            header += _append_newline(custom_rule.get_load_statement())
+        if rule_identifier and not in_ignored_load_statements:
+            load_statement = bazel_rule_type.get_load_statement()
+            if load_statement:
+                load_statements.append(load_statement)
+
+    for load_statement in sorted(load_statements):
+        header += _append_newline(load_statement)
 
     # Add ignored load statements right after the header.
     for ignored_load in ignored_load_statements:

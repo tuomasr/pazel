@@ -21,16 +21,24 @@ py_binary(
 py_library(
     name = "bazel_rules",
     srcs = ["bazel_rules.py"],
-    deps = [],
+)
+
+py_test(
+    name = "bazel_rules_test",
+    srcs = ["bazel_rules_test.py"],
+    size = "small",
+    deps = [":bazel_rules"],
 )
 
 py_library(
     name = "generate_rule",
     srcs = ["generate_rule.py"],
     deps = [
-        ":bazel_rules",
+        "//pazel/languages/py:py_deps",
+        "//pazel/languages/py:py_rules",
+        "//pazel/languages/proto:proto_deps",
+        "//pazel/languages/proto:proto_rules",
         ":parse_build",
-        ":parse_imports",
     ],
 )
 
@@ -49,12 +57,6 @@ py_library(
 py_library(
     name = "parse_build",
     srcs = ["parse_build.py"],
-    deps = [":helpers"],
-)
-
-py_library(
-    name = "parse_imports",
-    srcs = ["parse_imports.py"],
     deps = [":helpers"],
 )
 

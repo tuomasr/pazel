@@ -34,6 +34,7 @@ class PyDoctestRule(BazelRule):
     is_test_rule = True     # Is this a test rule?
     template = PY_DOCTEST_TEMPLATE  # Filled version of this will be written to the BUILD file.
     rule_identifier = 'py_doctest'  # The name of the rule.
+    replaces_rules = ['py_binary']
 
     @staticmethod
     def applies_to(script_name, script_source):
