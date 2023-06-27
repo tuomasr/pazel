@@ -1,6 +1,8 @@
 package(default_visibility = ["//visibility:public"])
 
 load("@my_deps//:requirements.bzl", "requirement")
+load("@com_github_grpc_grpc//bazel:python_rules.bzl", "py_proto_library")
+load("@rules_proto//proto:defs.bzl", "proto_library")
 
 # pazel-ignore
 load("//:custom_rules.bzl", "custom_rule")
@@ -35,6 +37,26 @@ py_library(
     name = "bar6",
     srcs = ["bar6.py"],
     deps = ["//xyz:abc1"],
+)
+
+proto_library(
+    name = "baz_proto",
+    srcs = ["baz.proto"],
+    deps = [
+        "//com/abc/protobuf:share_proto",
+        "//foo:zap_proto",
+    ],
+)
+
+py_proto_library(
+    name = "baz_py_pb2",
+    deps = [":baz_proto"],
+)
+
+py_library(
+    name = "baz",
+    srcs = ["baz.py"],
+    deps = [requirement("foo")],
 )
 
 py_library(

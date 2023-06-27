@@ -93,20 +93,21 @@ def is_ignored(script_path, ignored_rules):
 
     return ignored
 
-
-def is_python_file(path):
-    """Check whether the file in the given path is a Python file.
+def has_extension(path, extensions):
+    """Check whether the file is a file of the given types.
 
     Args:
         path (str): Path to a file.
+        extensions (list[str]): File extensions to return true for. 
 
     Returns:
         valid (bool): The file in path is a Python file.
     """
     valid = False
 
-    if os.path.isfile(path) and path.endswith('.py'):
-        valid = True
+    for extension in extensions:
+        if os.path.isfile(path) and path.endswith(extension):
+            valid = True
 
     return valid
 

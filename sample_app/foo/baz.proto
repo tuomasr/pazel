@@ -1,0 +1,9 @@
+package foo;
+
+import "foo/zap.proto";
+import "com/abc/protobuf/share.proto";
+
+message Baz {
+    foot.Zap zap = 1;
+    abc.Share = 2;
+}

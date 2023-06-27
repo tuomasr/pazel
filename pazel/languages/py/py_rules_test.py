@@ -6,15 +6,15 @@ from __future__ import print_function
 
 import unittest
 
+from pazel.generate_rule import infer_bazel_rule_types
 from pazel.bazel_rules import BazelRule
-from pazel.bazel_rules import get_native_bazel_rules
-from pazel.bazel_rules import infer_bazel_rule_type
-from pazel.bazel_rules import PyBinaryRule
-from pazel.bazel_rules import PY_BINARY_TEMPLATE
-from pazel.bazel_rules import PyLibraryRule
-from pazel.bazel_rules import PY_LIBRARY_TEMPLATE
-from pazel.bazel_rules import PyTestRule
-from pazel.bazel_rules import PY_TEST_TEMPLATE
+from pazel.languages.py.py_rules import get_bazel_rules
+from pazel.languages.py.py_rules import PyBinaryRule
+from pazel.languages.py.py_rules import PY_BINARY_TEMPLATE
+from pazel.languages.py.py_rules import PyLibraryRule
+from pazel.languages.py.py_rules import PY_LIBRARY_TEMPLATE
+from pazel.languages.py.py_rules import PyTestRule
+from pazel.languages.py.py_rules import PY_TEST_TEMPLATE
 
 
 class TestTemplates(unittest.TestCase):
@@ -121,31 +121,6 @@ if __name__ == '__main__':
 """
 
 
-class TestBazelRule(unittest.TestCase):
-    """Test BazelRule base class."""
-
-    def test_applies_to(self):
-        """Test BazelRule.applies_to."""
-        with self.assertRaises(NotImplementedError):
-            BazelRule.applies_to('script_name', 'script_source')
-
-    def test_find_existing(self):
-        """Test finding an existing Bazel rule in a BUILD source."""
-        build_source = """
-py_test(
-    name = "test_bazel_rules",
-    srcs = ["test_bazel_rules.py"],
-    size = "small",
-    deps = ["//pazel:bazel_rules"],
-)"""
-        self.assertIsNotNone(BazelRule.find_existing(build_source, 'test_bazel_rules.py'))
-        self.assertIsNone(BazelRule.find_existing(build_source, 'missing.py'))
-
-    def test_get_load_statement(self):
-        """Test BazelRule.get_load_statement."""
-        self.assertIsNone(BazelRule.get_load_statement())
-
-
 class TestPyBinaryRule(unittest.TestCase):
     """Test PyBinaryRule."""
 
@@ -204,13 +179,13 @@ class TestPyTestRule(unittest.TestCase):
         self.assertEqual(PyTestRule.applies_to(test_script_name, test_source), True)
 
 
-class TestNativeBazelRules(unittest.TestCase):
+class TestGetBazelRules(unittest.TestCase):
     """Test getting native Bazel rule classes."""
 
-    def test_get_native_bazel_rules(self):
+    def test_get_bazel_rules(self):
         """Test getting the list of native Bazel rules."""
         native_rules = set([PyBinaryRule, PyLibraryRule, PyTestRule])
-        self.assertEqual(set(get_native_bazel_rules()), native_rules)
+        self.assertEqual(set(get_bazel_rules()), native_rules)
 
 
 class TestBazelRuleInference(unittest.TestCase):
@@ -220,14 +195,14 @@ class TestBazelRuleInference(unittest.TestCase):
         """Test inferring the Bazel rule type."""
         custom_rules = []
 
-        self.assertEqual(infer_bazel_rule_type(script_name, binary_with_main_source, custom_rules),
-                         PyBinaryRule)
-        self.assertEqual(infer_bazel_rule_type(script_name, binary_without_main_source,
-                                               custom_rules), PyBinaryRule)
-        self.assertEqual(infer_bazel_rule_type(script_name, module_source, custom_rules),
-                         PyLibraryRule)
-        self.assertEqual(infer_bazel_rule_type(test_script_name, test_source, custom_rules),
-                         PyTestRule)
+        self.assertEqual(infer_bazel_rule_types(script_name, binary_with_main_source, custom_rules),
+                         [PyBinaryRule])
+        self.assertEqual(infer_bazel_rule_types(script_name, binary_without_main_source,
+                                               custom_rules), [PyBinaryRule])
+        self.assertEqual(infer_bazel_rule_types(script_name, module_source, custom_rules),
+                         [PyLibraryRule])
+        self.assertEqual(infer_bazel_rule_types(test_script_name, test_source, custom_rules),
+                         [PyTestRule])
 
 
 if __name__ == '__main__':

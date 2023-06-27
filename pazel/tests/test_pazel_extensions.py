@@ -16,13 +16,15 @@ class TestParseImports(unittest.TestCase):
         """Test that parse_pazel_extensions returns defaults for an invalid pazelrc file."""
         pazelrc_path = 'fail'
 
-        output_extension, custom_bazel_rules, custom_import_inference_rules, \
-            import_name_to_pip_name, local_import_name_to_dep, requirement_load \
+        output_extension, custom_bazel_rules, custom_bazel_rules_extra_extensions, \
+            custom_import_inference_rules, import_name_to_pip_name, \
+            local_import_name_to_dep, requirement_load \
             = parse_pazel_extensions(pazelrc_path)
 
         self.assertEqual(output_extension.header, '')
         self.assertEqual(output_extension.footer, '')
         self.assertEqual(custom_bazel_rules, [])
+        self.assertEqual(custom_bazel_rules_extra_extensions, [])
         self.assertEqual(custom_import_inference_rules, [])
         self.assertEqual(import_name_to_pip_name, dict())
         self.assertEqual(local_import_name_to_dep, dict())

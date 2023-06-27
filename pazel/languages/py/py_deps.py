@@ -32,7 +32,7 @@ def get_imports(script_source):
             module = node.module
 
             for name in node.names:
-                from_imports.append((module, name.name))
+                from_imports.append((module, translate_protobuf_names(name.name)))
         # Parse expressions of the form "import X".
         elif isinstance(node, ast.Import):
             for package in node.names:
@@ -40,6 +40,12 @@ def get_imports(script_source):
 
     return packages, from_imports
 
+# TODO(gobeil): Generalize this as a contribution from the proto language module.
+def translate_protobuf_names(name):
+    """Translates protocol buffer dependencies to their matching python generated code."""
+    if name.endswith('_pb2') or name.endswith('_pb2_grpc'):
+        return name.replace('_pb2', '_py_pb2')
+    return name
 
 def infer_import_type(all_imports, project_root, contains_pre_installed_packages, custom_rules):
     """Infer what is being imported.

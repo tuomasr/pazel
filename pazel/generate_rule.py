@@ -1,4 +1,4 @@
-"""Generate Bazel rule for a single Python file."""
+"""Generate Bazel rule for a single source file."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -6,11 +6,12 @@ from __future__ import print_function
 
 import os
 
-from pazel.bazel_rules import infer_bazel_rule_type
 from pazel.parse_build import find_existing_data_deps
 from pazel.parse_build import find_existing_test_size
-from pazel.parse_imports import get_imports
-from pazel.parse_imports import infer_import_type
+from pazel.languages.py import py_deps
+from pazel.languages.py import py_rules
+from pazel.languages.proto import proto_deps
+from pazel.languages.proto import proto_rules
 
 
 def _walk_modules(current_dir, modules):
@@ -92,7 +93,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
     Returns:
         rule (str): Bazel rule generated for the current Python script.
     """
-    script_name = os.path.basename(script_path).replace('.py', '')
+    script_name = os.path.basename(os.path.splitext(script_path)[0])
     deps = ''
     tab = '    '
 
@@ -111,16 +112,7 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
         deps += '\n'
 
     for module_name in sort_module_names(list(module_names)):
-        # Import from the same directory as the script resides.
-        if '.' not in module_name:
-            module_name = ':' + module_name
-        else:
-            # Format the dotted module name to the Bazel format with slashes.
-            module_name = '//' + module_name.replace('.', '/')
-
-            # Replace the last slash with :.
-            last_slash_idx = module_name.rfind('/')
-            module_name = module_name[:last_slash_idx] + ':' + module_name[last_slash_idx + 1:]
+        module_name = translate_dot_module_name_to_bazel(module_name)
 
         if multiple_deps:
             deps += 2*tab
@@ -168,14 +160,40 @@ def generate_rule(script_path, template, package_names, module_names, data_deps,
 
     return rule
 
+def translate_dot_module_name_to_bazel(module_name):
+    if '.' not in module_name:
+            # Import from the same directory as the script resides.
+            module_name = ':' + module_name
+    else:
+        # Interpret dot separated path as a bazel rule path.
+        module_components = module_name.split('.')
 
-def parse_script_and_generate_rule(script_path, project_root, contains_pre_installed_packages,
-                                   custom_bazel_rules, custom_import_inference_rules,
-                                   import_name_to_pip_name, local_import_name_to_dep):
+        # Pull out external repository name before creating root path.
+        # See: https://bazel.build/extending/repo
+        external_repository = ''
+        if module_components[0].startswith('@'):
+            external_repository = module_components.pop(0)
+
+        # Format the dotted module name to the Bazel format with slashes.
+        module_name = external_repository + '//'
+        if len(module_components) == 1:
+            module_name = module_name + ':' + module_components[0]
+        else:
+            module_name = module_name + '/'.join(module_components[:-1])
+            if len(module_components) > 1 and (module_components[-2] != module_components[-1]):
+                module_name = module_name + ':' + module_components[-1]
+    return module_name
+
+
+
+def parse_script_and_generate_rules(script_path, project_root, contains_pre_installed_packages,
+                                    custom_bazel_rules, custom_import_inference_rules,
+                                    import_name_to_pip_name, local_import_name_to_dep):
     """Generate Bazel Python rule for a Python script.
 
     Args:
-        script_path (str): Path to a Python file for which the Bazel rule is generated.
+        script_path (str): Path to a file for which the Bazel rule is generated.  Usually Python,
+            but could be an extra extension type requested by for custom rules.
         project_root (str): Imports in the Python script are assumed to be relative to this path.
         contains_pre_installed_packages (bool): Environment contains pre-installed packages (true)
             or only the standard library (false).
@@ -187,30 +205,91 @@ def parse_script_and_generate_rule(script_path, project_root, contains_pre_insta
             dependency.
 
     Returns:
-        rule (str): Bazel rule generated for the Python script.
+        rendered_rules (list of str): Bazel rules generated for the source code script.
+        rule_types (list of BazelRule): Bazel rule types generated for the source code script.
     """
     with open(script_path, 'r') as script_file:
         script_source = script_file.read()
 
+    # TODO(gobeil): Add dynamic registration mechanism.
+    lang_deps = None
+    if script_path.endswith('.py'):
+        lang_deps = py_deps
+    elif script_path.endswith('.proto'):
+        lang_deps = proto_deps
+
     # Get all imports in the script.
-    package_names, from_imports = get_imports(script_source)
+    package_names = []
+    from_imports = []
+    package_names, from_imports = lang_deps.get_imports(script_source)
+
     all_imports = package_names + from_imports
 
     # Infer the import type: Is a package, module, or an object being imported.
-    package_names, module_names = infer_import_type(all_imports, project_root,
+    package_names, module_names = lang_deps.infer_import_type(all_imports, project_root,
                                                     contains_pre_installed_packages,
                                                     custom_import_inference_rules)
 
     # Infer the Bazel rule type for the script.
-    bazel_rule_type = infer_bazel_rule_type(script_path, script_source, custom_bazel_rules)
+    bazel_rule_types = infer_bazel_rule_types(script_path, script_source, custom_bazel_rules)
 
-    # Data dependencies or test size cannot be inferred from the script source code currently.
-    # Use information in any existing BUILD files.
-    data_deps = find_existing_data_deps(script_path, bazel_rule_type)
-    test_size = find_existing_test_size(script_path, bazel_rule_type)
+    rendered_rules = []
+    for bazel_rule_type in bazel_rule_types:
+        # Data dependencies or test size cannot be inferred from the script source code currently.
+        # Use information in any existing BUILD files.
+        # TODO(gobeil): Generalize this mechanism to other build rule field types.
+        data_deps = None
+        test_size = None
+        if script_path.endswith('.py'):
+            data_deps = find_existing_data_deps(script_path, bazel_rule_type)
+            test_size = find_existing_test_size(script_path, bazel_rule_type)
 
-    # Generate the Bazel Python rule based on the gathered information.
-    rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
-                         data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
+        # Generate the Bazel rule based on the gathered information.
+        rendered_rule = generate_rule(script_path, bazel_rule_type.template, package_names, module_names,
+                             data_deps, test_size, import_name_to_pip_name, local_import_name_to_dep)
+        rendered_rules.append(rendered_rule)
 
-    return rule
+    return rendered_rules, bazel_rule_types
+
+def infer_bazel_rule_types(script_path, script_source, custom_rules):
+    """Infer the Bazel rule type given the path to the script and its source code.
+
+    Args:
+        script_path (str): Path to a Python script.
+        script_source (str): Source code of the Python script.
+        custom_rules (list of BazelRule classes): User-defined classes implementing BazelRule.
+
+    Returns:
+        bazel_rule_type (list of BazelRule): Rules representing the type of the source script.
+
+    Raises:
+        RuntimeError: If zero or more than one Bazel rule is found for the current script.
+    """
+    script_basename = os.path.basename(script_path)
+    script_extension_index = script_basename.rfind('.')
+    script_name = script_basename[:script_extension_index]
+    script_extension = script_basename[script_extension_index:]
+
+    # TODO(gobeil): Add dynamic registration mechanism.
+    lang_rules = None
+    if script_extension == '.py':
+        lang_rules = py_rules
+    elif script_extension == '.proto':
+        lang_rules = proto_rules
+    
+    native_rules = lang_rules.get_bazel_rules()
+    registered_rules = native_rules + custom_rules
+
+    # Collect rules that can apply to the source code.
+    applicable_rules = []
+    for bazel_rule in registered_rules:
+        if bazel_rule.applies_to(script_name, script_source):
+            applicable_rules.append(bazel_rule)
+
+    # Remove rules that are superseded by other applicable rules.
+    unnecessary_rule_identifiers = []
+    for bazel_rule in applicable_rules:
+        unnecessary_rule_identifiers.extend(bazel_rule.replaces_rules)
+    filtered_rules = filter(lambda rule: not rule.rule_identifier in unnecessary_rule_identifiers, applicable_rules)
+
+    return list(filtered_rules)

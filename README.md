@@ -1,7 +1,5 @@
 # pazel - generate Bazel BUILD files for Python
 
-[![Build Status](https://travis-ci.org/tuomasr/pazel.svg?branch=master)](https://travis-ci.org/tuomasr/pazel)
-
 ## Requirements
 
 ### pazel
@@ -13,7 +11,7 @@ Tested on Bazel 0.11.1. All recent versions are expected to work.
 ## Installation
 
 ```
-> git clone https://github.com/tuomasr/pazel.git
+> git clone https://github.com/gobeil/pazel.git
 > cd pazel
 > python setup.py install
 ```
@@ -43,6 +41,11 @@ Start from the `pazel` root directory.
 > pazel
 Generated BUILD files for <pazel_install_dir>/sample_app.
 ```
+
+### Bazel Rules Generated
+
+- [Python Conventions](pazel/languages/py/conventions.md)
+- [Protocol Buffer Conventions](pazel/languages/proto/conventions.md)
 
 ### Testing the generated BUILD files
 

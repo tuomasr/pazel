@@ -5,7 +5,7 @@ py_binary(
     srcs = ["abc1.py"],
     deps = [
         "//foo:__init__",
-        "//foo:foo",
+        "//foo",
     ],
 )
 
